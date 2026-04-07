@@ -1,5 +1,16 @@
 # Findstb.cmake
-# Provides: stb
+# Provides: stb::stb
+
+# Target already exists.
+if(TARGET stb::stb)
+    return()
+endif()
+
+# Legacy stb already exists, so we create an alias.
+if(TARGET stb)
+    add_library(stb::stb ALIAS stb)
+    return()
+endif()
 
 find_path(STB_INCLUDE_DIR
     NAMES stb_image.h
@@ -10,9 +21,10 @@ find_path(STB_INCLUDE_DIR
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(stb REQUIRED_VARS STB_INCLUDE_DIR)
 
-if(stb_FOUND AND NOT TARGET stb)
-    add_library(stb INTERFACE IMPORTED)
-    set_target_properties(stb PROPERTIES
+if(STB_INCLUDE_DIR)
+    add_library(stb::stb INTERFACE IMPORTED)
+    set_target_properties(stb::stb PROPERTIES
         INTERFACE_INCLUDE_DIRECTORIES "${STB_INCLUDE_DIR}"
     )
+    add_library(stb ALIAS stb::stb)
 endif()
