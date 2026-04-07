@@ -60,13 +60,6 @@ arrays:
       type: Integer
       length: valuesCount
 ---
-# Struct that contains a dynamic array.
-name: DArrayType
-arrays:
-    - name: values
-      type: Integer
-      dynamic: true
----
 # Struct with an optional array field.
 name: ArrayTypeOpt
 arrays:

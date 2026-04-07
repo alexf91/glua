@@ -5,7 +5,6 @@
 #include <glua/glua.h>
 #include <lauxlib.h>
 #include <lua.h>
-#include <stb_ds.h>
 #include <unity.h>
 
 // State of the Lua interpreter used throughout tests.
@@ -13,13 +12,11 @@ lua_State *L = nullptr;
 
 void setUp(void) {
     L = luaL_newstate();
-    GluaInit();
 }
 
 void tearDown(void) {
     lua_close(L);
     L = nullptr;
-    GluaCleanup();
 }
 
 // Number of entries in the LUA_REGISTRYINDEX table.
@@ -214,26 +211,6 @@ void test_array_type(void) {
     GluaFreeArrayType(L, tp);
 }
 
-// Try to read a type that contains a dynamic array.
-void test_darray_type(void) {
-    DArrayType tp;
-    const char *program = "return {"
-                          "  values = {42, 43, 44, 45}"
-                          "}";
-    int top = lua_gettop(L);
-    TEST_ASSERT_EQUAL(LUA_OK, luaL_dostring(L, program));
-    TEST_ASSERT_EQUAL(GLUA_OK, GluaReadDArrayType(L, -1, &tp));
-    TEST_ASSERT_EQUAL_INT(top + 1, lua_gettop(L));
-
-    TEST_ASSERT_EQUAL(4, arrlen(tp.values));
-    TEST_ASSERT_EQUAL(42, tp.values[0]);
-    TEST_ASSERT_EQUAL(43, tp.values[1]);
-    TEST_ASSERT_EQUAL(44, tp.values[2]);
-    TEST_ASSERT_EQUAL(45, tp.values[3]);
-
-    GluaFreeDArrayType(L, tp);
-}
-
 // Try to read a type that contains an array, but the array is nil.
 void test_array_type_nil_error(void) {
     ArrayType tp;
@@ -282,24 +259,6 @@ void test_read_array_integer(void) {
     GluaFreeArrayInteger(L, values, count);
 }
 
-// Read a dynamic array directly from the stack.
-void test_read_darray_integer(void) {
-    lua_Integer *values = nullptr;
-    const char *program = "return {42, 43, 44, 45}";
-    int top = lua_gettop(L);
-    TEST_ASSERT_EQUAL(LUA_OK, luaL_dostring(L, program));
-    TEST_ASSERT_EQUAL(GLUA_OK, GluaReadDArrayInteger(L, -1, &values));
-    TEST_ASSERT_EQUAL_INT(top + 1, lua_gettop(L));
-
-    TEST_ASSERT_EQUAL(4, arrlen(values));
-    TEST_ASSERT_EQUAL(42, values[0]);
-    TEST_ASSERT_EQUAL(43, values[1]);
-    TEST_ASSERT_EQUAL(44, values[2]);
-    TEST_ASSERT_EQUAL(45, values[3]);
-
-    GluaFreeDArrayInteger(L, values);
-}
-
 // Read a string array directly from the stack.
 void test_read_array_string(void) {
     char **values;
@@ -317,24 +276,6 @@ void test_read_array_string(void) {
     TEST_ASSERT_EQUAL_STRING("D", values[3]);
 
     GluaFreeArrayString(L, values, count);
-}
-
-// Read a dynamic string array directly from the stack.
-void test_read_darray_string(void) {
-    char **values = nullptr;
-    const char *program = "return {'A', 'B', 'C', 'D'}";
-    int top = lua_gettop(L);
-    TEST_ASSERT_EQUAL(LUA_OK, luaL_dostring(L, program));
-    TEST_ASSERT_EQUAL(GLUA_OK, GluaReadDArrayString(L, -1, &values));
-    TEST_ASSERT_EQUAL_INT(top + 1, lua_gettop(L));
-
-    TEST_ASSERT_EQUAL(4, arrlen(values));
-    TEST_ASSERT_EQUAL_STRING("A", values[0]);
-    TEST_ASSERT_EQUAL_STRING("B", values[1]);
-    TEST_ASSERT_EQUAL_STRING("C", values[2]);
-    TEST_ASSERT_EQUAL_STRING("D", values[3]);
-
-    GluaFreeDArrayString(L, values);
 }
 
 void test_union_type(void) {
@@ -458,27 +399,6 @@ void test_push_array_integer(void) {
     GluaFreeArrayInteger(L, rvalues, rsize);
 }
 
-void test_push_darray_integer(void) {
-    int top = lua_gettop(L);
-    lua_Integer wvalues[] = {42, 43, 44, 45, 46, 47, 48};
-    size_t wsize = sizeof(wvalues) / sizeof(wvalues[0]);
-    lua_Integer *warr = nullptr;
-    arrsetlen(warr, wsize);
-    memcpy(warr, wvalues, sizeof(wvalues));
-
-    TEST_ASSERT_EQUAL(GLUA_OK, GluaPushDArrayInteger(L, warr));
-    TEST_ASSERT_EQUAL_INT(top + 1, lua_gettop(L));
-
-    lua_Integer *rvalues;
-    size_t rsize;
-    TEST_ASSERT_EQUAL(GLUA_OK, GluaReadArrayInteger(L, -1, &rvalues, &rsize));
-    TEST_ASSERT_EQUAL(wsize, rsize);
-    TEST_ASSERT_EQUAL_INT64_ARRAY(wvalues, rvalues, rsize);
-
-    GluaFreeArrayInteger(L, rvalues, rsize);
-    arrfree(warr);
-}
-
 void test_push_array_integer_nullptr(void) {
     int top = lua_gettop(L);
     TEST_ASSERT_EQUAL(GLUA_OK, GluaPushArrayInteger(L, nullptr, 0));
@@ -529,35 +449,6 @@ void test_push_array_base_type(void) {
     }
 
     GluaFreeArrayBaseType(L, rvalues, rsize);
-}
-
-void test_push_darray_base_type(void) {
-    int top = lua_gettop(L);
-    BaseType wvalues[] = {
-        {.valueInteger = 42, .valueNumber = 42.42, .valueString = "value42"},
-        {.valueInteger = 43, .valueNumber = 43.43, .valueString = "value43"},
-    };
-    size_t wsize = sizeof(wvalues) / sizeof(wvalues[0]);
-    BaseType *warr = nullptr;
-    arrsetlen(warr, wsize);
-    memcpy(warr, wvalues, sizeof(wvalues));
-
-    TEST_ASSERT_EQUAL(GLUA_OK, GluaPushDArrayBaseType(L, warr));
-    TEST_ASSERT_EQUAL_INT(top + 1, lua_gettop(L));
-
-    BaseType *rvalues;
-    size_t rsize;
-    TEST_ASSERT_EQUAL(GLUA_OK, GluaReadArrayBaseType(L, -1, &rvalues, &rsize));
-    TEST_ASSERT_EQUAL(wsize, rsize);
-
-    for (size_t i = 0; i < rsize; i++) {
-        TEST_ASSERT_EQUAL_INT64(wvalues[i].valueInteger, rvalues[i].valueInteger);
-        TEST_ASSERT_EQUAL_FLOAT(wvalues[i].valueNumber, rvalues[i].valueNumber);
-        TEST_ASSERT_EQUAL_STRING(wvalues[i].valueString, rvalues[i].valueString);
-    }
-
-    GluaFreeArrayBaseType(L, rvalues, rsize);
-    arrfree(warr);
 }
 
 void test_push_union_type(void) {
@@ -611,13 +502,10 @@ int main(void) {
     RUN_TEST(test_base_nil_error);
     RUN_TEST(test_base_type_error);
     RUN_TEST(test_array_type);
-    RUN_TEST(test_darray_type);
     RUN_TEST(test_array_type_nil_error);
     RUN_TEST(test_array_type_opt);
     RUN_TEST(test_read_array_integer);
-    RUN_TEST(test_read_darray_integer);
     RUN_TEST(test_read_array_string);
-    RUN_TEST(test_read_darray_string);
     RUN_TEST(test_union_type);
     RUN_TEST(test_union_type_opt);
     RUN_TEST(test_union_type_index_error);
@@ -631,11 +519,9 @@ int main(void) {
     RUN_TEST(test_push_luaref_noref);
     RUN_TEST(test_push_luaref_invalid);
     RUN_TEST(test_push_array_integer);
-    RUN_TEST(test_push_darray_integer);
     RUN_TEST(test_push_array_integer_nullptr);
     RUN_TEST(test_push_base_type);
     RUN_TEST(test_push_array_base_type);
-    RUN_TEST(test_push_darray_base_type);
     RUN_TEST(test_push_union_type);
     RUN_TEST(test_push_union_type_index_error);
     RUN_TEST(test_push_union_type_opt);

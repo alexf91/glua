@@ -7,14 +7,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#ifdef GLUA_ENABLE_STB
+#define STB_DS_IMPLEMENTATION
+#include <stb_ds.h>
+#endif /* GLUA_ENABLE_STB */
+
 static_assert(LUA_VERSION_NUM == 505);
-
-int GluaInit(void) {
-    return GLUA_OK;
-}
-
-void GluaCleanup(void) {
-}
 
 int GluaReadInteger(lua_State *L, int idx, lua_Integer *value) {
     *value = 0;
@@ -39,11 +37,13 @@ int GluaPushInteger(lua_State *L, lua_Integer value) {
 }
 
 GLUA_READ_ARRAY_FUNCTION(Integer, lua_Integer)
-GLUA_READ_DARRAY_FUNCTION(Integer, lua_Integer)
 GLUA_PUSH_ARRAY_FUNCTION(Integer, lua_Integer)
-GLUA_PUSH_DARRAY_FUNCTION(Integer, lua_Integer)
 GLUA_FREE_ARRAY_FUNCTION(Integer, lua_Integer)
+#ifdef GLUA_ENABLE_STB
+GLUA_READ_DARRAY_FUNCTION(Integer, lua_Integer)
+GLUA_PUSH_DARRAY_FUNCTION(Integer, lua_Integer)
 GLUA_FREE_DARRAY_FUNCTION(Integer, lua_Integer)
+#endif /* GLUA_ENABLE_STB */
 
 int GluaReadNumber(lua_State *L, int idx, lua_Number *value) {
     *value = 0;
@@ -68,11 +68,13 @@ int GluaPushNumber(lua_State *L, lua_Number value) {
 }
 
 GLUA_READ_ARRAY_FUNCTION(Number, lua_Number)
-GLUA_READ_DARRAY_FUNCTION(Number, lua_Number)
 GLUA_PUSH_ARRAY_FUNCTION(Number, lua_Number)
-GLUA_PUSH_DARRAY_FUNCTION(Number, lua_Number)
 GLUA_FREE_ARRAY_FUNCTION(Number, lua_Number)
+#ifdef GLUA_ENABLE_STB
+GLUA_READ_DARRAY_FUNCTION(Number, lua_Number)
+GLUA_PUSH_DARRAY_FUNCTION(Number, lua_Number)
 GLUA_FREE_DARRAY_FUNCTION(Number, lua_Number)
+#endif /* GLUA_ENABLE_STB */
 
 int GluaReadString(lua_State *L, int idx, char **value) {
     int status = GLUA_OK;
@@ -101,11 +103,13 @@ int GluaPushString(lua_State *L, const char *value) {
 }
 
 GLUA_READ_ARRAY_FUNCTION(String, char *)
-GLUA_READ_DARRAY_FUNCTION(String, char *)
 GLUA_PUSH_ARRAY_FUNCTION(String, const char *)
-GLUA_PUSH_DARRAY_FUNCTION(String, const char *)
 GLUA_FREE_ARRAY_FUNCTION(String, char *)
+#ifdef GLUA_ENABLE_STB
+GLUA_READ_DARRAY_FUNCTION(String, char *)
+GLUA_PUSH_DARRAY_FUNCTION(String, const char *)
 GLUA_FREE_DARRAY_FUNCTION(String, char *)
+#endif /* GLUA_ENABLE_STB */
 
 int GluaReadLuaRef(lua_State *L, int idx, int *ref) {
     lua_pushvalue(L, idx);
@@ -131,11 +135,13 @@ int GluaPushLuaRef(lua_State *L, int value) {
 }
 
 GLUA_READ_ARRAY_FUNCTION(LuaRef, int)
-GLUA_READ_DARRAY_FUNCTION(LuaRef, int)
 GLUA_PUSH_ARRAY_FUNCTION(LuaRef, int)
-GLUA_PUSH_DARRAY_FUNCTION(LuaRef, int)
 GLUA_FREE_ARRAY_FUNCTION(LuaRef, int)
+#ifdef GLUA_ENABLE_STB
+GLUA_READ_DARRAY_FUNCTION(LuaRef, int)
+GLUA_PUSH_DARRAY_FUNCTION(LuaRef, int)
 GLUA_FREE_DARRAY_FUNCTION(LuaRef, int)
+#endif /* GLUA_ENABLE_STB */
 
 int GluaReadBoolean(lua_State *L, int idx, bool *value) {
     *value = lua_toboolean(L, idx);

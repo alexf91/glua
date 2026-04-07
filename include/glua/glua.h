@@ -3,7 +3,10 @@
 #pragma once
 
 #include <lua.h>
+
+#ifdef GLUA_ENABLE_STB
 #include <stb_ds.h>
+#endif /* GLUA_ENABLE_STB */
 
 typedef lua_Integer Integer;
 typedef lua_Number Number;
@@ -51,6 +54,7 @@ enum GluaStatusCode {
         return GLUA_OK;                                                                \
     }
 
+#ifdef GLUA_ENABLE_STB
 /**
  * Create the definition of a `GluaReadDArray` function for the type `luatype` with the
  * corresponding type `ctype`.
@@ -70,6 +74,7 @@ enum GluaStatusCode {
         free(svalues);                                                                 \
         return GLUA_OK;                                                                \
     }
+#endif /* GLUA_ENABLE_STB */
 
 /**
  * Create the definition of a `GluaFreeArray` function for the type `luatype` with the
@@ -82,6 +87,7 @@ enum GluaStatusCode {
         free(values);                                                                  \
     }
 
+#ifdef GLUA_ENABLE_STB
 /**
  * Create the definition of a `GluaFreeDArray` function for the type `luatype` with the
  * corresponding type `ctype`.
@@ -92,6 +98,7 @@ enum GluaStatusCode {
             GluaFree##luatype(L, values[i]);                                           \
         arrfree(values);                                                               \
     }
+#endif /* GLUA_ENABLE_STB */
 
 /**
  * Create a definition of a `GluaPushArray` function for the type `luatype` with the
@@ -111,6 +118,7 @@ enum GluaStatusCode {
         return GLUA_OK;                                                                \
     }
 
+#ifdef GLUA_ENABLE_STB
 /**
  * Create a definition of a `GluaDPushArray` function for the type `luatype` with the
  * corresponding type `ctype`.
@@ -119,14 +127,9 @@ enum GluaStatusCode {
     int GluaPushDArray##luatype(lua_State *L, ctype *values) {                         \
         return GluaPushArray##luatype(L, values, arrlenu(values));                     \
     }
+#endif /* GLUA_ENABLE_STB */
 
 // clang-format on
-
-/** Initialize the Glua subsystem. */
-int GluaInit(void);
-
-/** Cleanup the Glua subsystem. */
-void GluaCleanup(void);
 
 /** Read an integer value from the stack index `idx`. */
 int GluaReadInteger(lua_State *L, int idx, lua_Integer *value);
@@ -134,8 +137,10 @@ int GluaReadInteger(lua_State *L, int idx, lua_Integer *value);
 /** Read an integer array from the stack index `idx`. */
 int GluaReadArrayInteger(lua_State *L, int idx, lua_Integer **values, size_t *count);
 
+#ifdef GLUA_ENABLE_STB
 /** Read a dynamic (STB) integer array from the stack index `idx`. */
 int GluaReadDArrayInteger(lua_State *L, int idx, lua_Integer **values);
+#endif /* GLUA_ENABLE_STB */
 
 /** Free an integer. */
 void GluaFreeInteger(lua_State *L, lua_Integer value);
@@ -143,8 +148,10 @@ void GluaFreeInteger(lua_State *L, lua_Integer value);
 /** Free an integer array. */
 void GluaFreeArrayInteger(lua_State *L, lua_Integer *values, size_t count);
 
+#ifdef GLUA_ENABLE_STB
 /** Free a dynamic integer array. */
 void GluaFreeDArrayInteger(lua_State *L, lua_Integer *values);
+#endif /* GLUA_ENABLE_STB */
 
 /** Push an integer value to the stack. */
 int GluaPushInteger(lua_State *L, lua_Integer value);
@@ -152,8 +159,10 @@ int GluaPushInteger(lua_State *L, lua_Integer value);
 /** Push an integer array to the stack. */
 int GluaPushArrayInteger(lua_State *L, lua_Integer *values, size_t size);
 
+#ifdef GLUA_ENABLE_STB
 /** Push a dynamic integer array to the stack. */
 int GluaPushDArrayInteger(lua_State *L, lua_Integer *values);
+#endif /* GLUA_ENABLE_STB */
 
 /** Read a floating point value from the stack index `idx`. */
 int GluaReadNumber(lua_State *L, int idx, lua_Number *value);
@@ -161,8 +170,10 @@ int GluaReadNumber(lua_State *L, int idx, lua_Number *value);
 /** Read a floating point array from the stack index `idx`. */
 int GluaReadArrayNumber(lua_State *L, int idx, lua_Number **values, size_t *count);
 
+#ifdef GLUA_ENABLE_STB
 /** Read a dynamic (STB) floating point array from the stack index `idx`. */
 int GluaReadDArrayNumber(lua_State *L, int idx, lua_Number **values);
+#endif /* GLUA_ENABLE_STB */
 
 /** Free a number. */
 void GluaFreeNumber(lua_State *L, lua_Number value);
@@ -170,8 +181,10 @@ void GluaFreeNumber(lua_State *L, lua_Number value);
 /** Free a number array. */
 void GluaFreeArrayNumber(lua_State *L, lua_Number *values, size_t count);
 
+#ifdef GLUA_ENABLE_STB
 /** Free a dynamic number array. */
 void GluaFreeDArrayNumber(lua_State *L, lua_Number *values);
+#endif /* GLUA_ENABLE_STB */
 
 /** Push a floating point value to the stack. */
 int GluaPushNumber(lua_State *L, lua_Number value);
@@ -179,8 +192,10 @@ int GluaPushNumber(lua_State *L, lua_Number value);
 /** Push a number array to the stack. */
 int GluaPushArrayNumber(lua_State *L, lua_Number *values, size_t size);
 
+#ifdef GLUA_ENABLE_STB
 /** Push a dynamic number array to the stack. */
 int GluaPushDArrayNumber(lua_State *L, lua_Number *values);
+#endif /* GLUA_ENABLE_STB */
 
 /**
  * Read a string value from the stack index `idx`.
@@ -193,8 +208,10 @@ int GluaReadString(lua_State *L, int idx, char **value);
 /** Read a string array from the stack index `idx`. */
 int GluaReadArrayString(lua_State *L, int idx, char ***values, size_t *count);
 
+#ifdef GLUA_ENABLE_STB
 /** Read a dynamic (STB) string array from the stack index `idx`. */
 int GluaReadDArrayString(lua_State *L, int idx, char ***values);
+#endif /* GLUA_ENABLE_STB */
 
 /** Free a string. */
 void GluaFreeString(lua_State *L, char *value);
@@ -202,8 +219,10 @@ void GluaFreeString(lua_State *L, char *value);
 /** Free a string array. */
 void GluaFreeArrayString(lua_State *L, char **values, size_t count);
 
+#ifdef GLUA_ENABLE_STB
 /** Free a dynamic string array. */
 void GluaFreeDArrayString(lua_State *L, char **values);
+#endif /* GLUA_ENABLE_STB */
 
 /** Push a string value to the stack. */
 int GluaPushString(lua_State *L, const char *value);
@@ -211,8 +230,10 @@ int GluaPushString(lua_State *L, const char *value);
 /** Push a string array to the stack. */
 int GluaPushArrayString(lua_State *L, const char **values, size_t size);
 
+#ifdef GLUA_ENABLE_STB
 /** Push a dynamic string array to the stack. */
 int GluaPushDArrayString(lua_State *L, const char **values);
+#endif /* GLUA_ENABLE_STB */
 
 /**
  * Read an arbitrary Lua value from the stack index `idx` and create a reference to it
@@ -227,8 +248,10 @@ int GluaReadLuaRef(lua_State *L, int idx, int *ref);
 /** Read a LuaRef array from the stack index `idx`. */
 int GluaReadArrayLuaRef(lua_State *L, int idx, int **values, size_t *count);
 
+#ifdef GLUA_ENABLE_STB
 /** Read a dynamic (STB) LuaRef array from the stack index `idx`. */
 int GluaReadDArrayLuaRef(lua_State *L, int idx, int **values);
+#endif /* GLUA_ENABLE_STB */
 
 /** Free a reference by calling `luaL_unref()`. */
 void GluaFreeLuaRef(lua_State *L, int value);
@@ -236,8 +259,10 @@ void GluaFreeLuaRef(lua_State *L, int value);
 /** Free a LuaRef array. */
 void GluaFreeArrayLuaRef(lua_State *L, int *values, size_t count);
 
+#ifdef GLUA_ENABLE_STB
 /** Free a dynamic LuaRef array. */
 void GluaFreeDArrayLuaRef(lua_State *L, int *values);
+#endif /* GLUA_ENABLE_STB */
 
 /**
  * Push LuaRef value to the stack.
@@ -249,8 +274,10 @@ int GluaPushLuaRef(lua_State *L, int value);
 /** Push a LuaRef array to the stack. */
 int GluaPushArrayLuaRef(lua_State *L, int *values, size_t size);
 
+#ifdef GLUA_ENABLE_STB
 /** Push a dynamic LuaRef array to the stack. */
 int GluaPushDArrayLuaRef(lua_State *L, int *values);
+#endif /* GLUA_ENABLE_STB */
 
 /** Read a boolean value from the stack index `idx`. */
 int GluaReadBoolean(lua_State *L, int idx, bool *value);
@@ -258,8 +285,10 @@ int GluaReadBoolean(lua_State *L, int idx, bool *value);
 /** Read a boolean array from the stack index `idx`. */
 int GluaReadArrayBoolean(lua_State *L, int idx, bool **values, size_t *count);
 
+#ifdef GLUA_ENABLE_STB
 /** Read a dynamic (STB) boolean array from the stack index `idx`. */
 int GluaReadDArrayBoolean(lua_State *L, int idx, bool **values);
+#endif /* GLUA_ENABLE_STB */
 
 /** Free a boolean. */
 void GluaFreeBoolean(lua_State *L, bool value);
@@ -267,8 +296,10 @@ void GluaFreeBoolean(lua_State *L, bool value);
 /** Free a boolean array. */
 void GluaFreeArrayBoolean(lua_State *L, bool *values, size_t count);
 
+#ifdef GLUA_ENABLE_STB
 /** Free a dynamic boolean array. */
 void GluaFreeDArrayBoolean(lua_State *L, bool *values);
+#endif /* GLUA_ENABLE_STB */
 
 /** Push a boolean value to the stack. */
 int GluaPushBoolean(lua_State *L, bool value);
@@ -276,5 +307,7 @@ int GluaPushBoolean(lua_State *L, bool value);
 /** Push a boolean array to the stack. */
 int GluaPushArrayBoolean(lua_State *L, bool *values, size_t size);
 
+#ifdef GLUA_ENABLE_STB
 /** Push a dynamic boolean array to the stack. */
 int GluaPushDArrayBoolean(lua_State *L, bool *values);
+#endif /* GLUA_ENABLE_STB */

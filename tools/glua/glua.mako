@@ -52,8 +52,10 @@ static inline int GluaRead${tp.name}(lua_State *L, int idx, ${tp.name} *value);
 /** Read an array of types `${tp.name}` from the given stack index. */
 static inline int GluaReadArray${tp.name}(lua_State *L, int idx, ${tp.name} **value, size_t *count);
 
+#ifdef GLUA_ENABLE_STB
 /** Read a dynamic array of types `${tp.name}` from the given stack index. */
 static inline int GluaReadDArray${tp.name}(lua_State *L, int idx, ${tp.name} **value);
+#endif /* GLUA_ENABLE_STB */
 
 /**
  * Push an element of type `${tp.name}` onto the stack.
@@ -71,6 +73,7 @@ static inline int GluaPush${tp.name}(lua_State *L, ${tp.name} value);
  */
 static inline int GluaPushArray${tp.name}(lua_State *L, ${tp.name} *values, size_t count);
 
+#ifdef GLUA_ENABLE_STB
 /**
  * Push a dynamic array of type `${tp.name}` onto the stack.
  *
@@ -78,6 +81,7 @@ static inline int GluaPushArray${tp.name}(lua_State *L, ${tp.name} *values, size
  * If an error occurs, then nothing is pushed.
  */
 static inline int GluaPushDArray${tp.name}(lua_State *L, ${tp.name} *values);
+#endif /* GLUA_ENABLE_STB */
 
 /** Free a value of type `${tp.name}`. */
 static inline void GluaFree${tp.name}(lua_State *L, ${tp.name} value);
@@ -85,8 +89,10 @@ static inline void GluaFree${tp.name}(lua_State *L, ${tp.name} value);
 /** Free an array of type `${tp.name}`. */
 static inline void GluaFreeArray${tp.name}(lua_State *L, ${tp.name} *value, size_t count);
 
+#ifdef GLUA_ENABLE_STB
 /** Free a dynamic array of type `${tp.name}`. */
 static inline void GluaFreeDArray${tp.name}(lua_State *L, ${tp.name} *value);
+#endif /* GLUA_ENABLE_STB */
 
 % endfor
 
@@ -304,11 +310,13 @@ static inline int GluaPush${tp.name}(lua_State *L, ${tp.name} value) {
 
 // clang-format off
 static inline GLUA_READ_ARRAY_FUNCTION(${tp.name}, ${tp.name})
-static inline GLUA_READ_DARRAY_FUNCTION(${tp.name}, ${tp.name})
 static inline GLUA_FREE_ARRAY_FUNCTION(${tp.name}, ${tp.name})
-static inline GLUA_FREE_DARRAY_FUNCTION(${tp.name}, ${tp.name})
 static inline GLUA_PUSH_ARRAY_FUNCTION(${tp.name}, ${tp.name})
+#ifdef GLUA_ENABLE_STB
+static inline GLUA_READ_DARRAY_FUNCTION(${tp.name}, ${tp.name})
+static inline GLUA_FREE_DARRAY_FUNCTION(${tp.name}, ${tp.name})
 static inline GLUA_PUSH_DARRAY_FUNCTION(${tp.name}, ${tp.name})
+#endif /* GLUA_ENABLE_STB */
 CLANG_FORMAT_EOF;
 // clang-format on
 

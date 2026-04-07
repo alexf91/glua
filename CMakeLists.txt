@@ -10,17 +10,19 @@ set(GLUA_MODULE_PATH
     CACHE INTERNAL "Path to glua CMake modules"
 )
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-include(FetchContent)
 
 find_package(lua REQUIRED)
-find_package(stb REQUIRED)
 
-# Add library and optional tests.
+option(GLUA_ENABLE_STB "Build with STB functions" ON)
+if (GLUA_ENABLE_STB)
+    find_package(stb REQUIRED)
+endif()
+
 add_subdirectory(src/glua)
-option(WITH_TESTS "Build with tests" OFF)
-if (WITH_TESTS)
+
+option(GLUA_ENABLE_TESTS "Build with tests" OFF)
+if (GLUA_ENABLE_TESTS)
     if (NOT TARGET unity::framework)
-        message("Unity not provided. Looking for package...")
         find_package(unity REQUIRED)
     endif()
     add_subdirectory(tests)
