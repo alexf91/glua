@@ -20,6 +20,8 @@ The following targets can be provided:
 - `lua::lua` for Lua 5.5 (either static or dynamic)
 - `stb::stb` for [STB](http://github.com/nothings/stb)
 
+Support for dynamic arrays is enabled by default, but can be deactivated by setting `GLUA_ENABLE_STB=OFF` during configuration.
+
 ## Usage
 
 Define an interface in a YAML file.
