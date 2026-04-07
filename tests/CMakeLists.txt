@@ -1,23 +1,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Generate the glua file for test_glua.
-set(GLUA_GENERATE "${CMAKE_SOURCE_DIR}/tools/glua-generate.sh")
-file(GLOB GLUA_MODULE_FILES CONFIGURE_DEPENDS
-    "${CMAKE_SOURCE_DIR}/tools/glua/*.py"
-    "${CMAKE_SOURCE_DIR}/tools/glua/*.mako"
+include(Glua)
+glua_target(
+    gluatypes
+    "${CMAKE_CURRENT_LIST_DIR}/gluatypes.yaml"
+    "${CMAKE_CURRENT_BINARY_DIR}/generated/glua.h"
 )
-add_custom_command(
-    OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/generated/glua.h"
-    DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/gluatypes.yaml" ${GLUA_GENERATE} ${GLUA_MODULE_FILES}
-    COMMAND mkdir -p "${CMAKE_CURRENT_BINARY_DIR}/generated/"
-    COMMAND
-        "${GLUA_GENERATE}"
-            "${CMAKE_CURRENT_SOURCE_DIR}/gluatypes.yaml" | clang-format >
-                "${CMAKE_CURRENT_BINARY_DIR}/generated/glua.h"
-    COMMENT "Generating Glua functions"
-    VERBATIM
-)
-add_custom_target(gluatypes ALL DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/generated/glua.h")
 
 # Testrunners
 file(GLOB TESTFILES CONFIGURE_DEPENDS "*.c")
