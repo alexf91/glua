@@ -18,14 +18,13 @@ FetchContent_MakeAvailable(stb)
 add_library(stb INTERFACE)
 target_include_directories(stb SYSTEM INTERFACE ${stb_SOURCE_DIR})
 
-set(UNITY_COMMIT v2.6.1)
-FetchContent_Declare(
-  unity
-  DOWNLOAD_EXTRACT_TIMESTAMP NEW
-  URL https://github.com/ThrowTheSwitch/Unity/archive/${UNITY_COMMIT}.tar.gz
-)
-FetchContent_MakeAvailable(unity)
-
-# Add library, executables and resources.
+# Add library and optionall tests.
 add_subdirectory(src/glua)
-add_subdirectory(tests)
+option(WITH_TESTS "Build with tests" OFF)
+if (WITH_TESTS)
+  if (NOT TARGET unity::framework)
+    message("Unity not provided. Looking for package...")
+    find_package(unity REQUIRED)
+  endif()
+  add_subdirectory(tests)
+endif()
