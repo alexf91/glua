@@ -8,6 +8,11 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(FetchContent)
 
+if (NOT TARGET lua::lua)
+  message("Lua not provided. Looking for package...")
+  find_package(lua REQUIRED)
+endif()
+
 if (NOT TARGET stb::stb)
   message("STB not provided. Looking for package...")
   find_package(stb REQUIRED)
