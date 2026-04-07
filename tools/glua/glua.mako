@@ -37,6 +37,8 @@ for tp in types:
 #include <${header}>
 % endfor
 
+#define _unused(x) ((void)x)
+
 ## Forward-declare functions for reading and freeing.
 % for tp in types:
 /**
@@ -109,6 +111,7 @@ static inline int GluaRead${tp.name}(lua_State *L, int idx, ${tp.name} *value) {
     int status = GLUA_OK;
     memset(value, 0, sizeof(*value));
     int stack_top = lua_gettop(L);
+    _unused(stack_top);
     int absidx = lua_absindex(L, idx);
 
     if (!lua_istable(L, absidx))
