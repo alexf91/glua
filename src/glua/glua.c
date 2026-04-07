@@ -7,6 +7,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+static_assert(LUA_VERSION_NUM == 505);
+
 int GluaInit(void) {
     return GLUA_OK;
 }
