@@ -4,7 +4,11 @@ cmake_minimum_required(VERSION 3.20)
 project(glua C)
 
 # General configuration.
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+set(GLUA_MODULE_PATH
+    "${CMAKE_CURRENT_LIST_DIR}/cmake"
+    CACHE INTERNAL "Path to glua CMake modules"
+)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(FetchContent)
 

@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+
+set(GLUA_TOOLS "${CMAKE_CURRENT_LIST_DIR}/../tools")
+
+# Create a target for a Glua header file.
+# <input> is a YAML file with the specification and <output> the generated header file.
+function(glua_target target input output)
+    set(GLUA_GENERATE "${GLUA_TOOLS}/glua-generate.sh")
+    file(GLOB GLUA_MODULE_FILES CONFIGURE_DEPENDS
+        "${GLUA_TOOLS}/glua/*.py"
+        "${GLUA_TOOLS}/glua/*.mako"
+    )
+    get_filename_component(outdir "${output}" DIRECTORY)
+    add_custom_command(
+        OUTPUT "${output}"
+        DEPENDS "${input}" ${GLUA_GENERATE} ${GLUA_MODULE_FILES}
+        COMMAND mkdir -p "${outdir}"
+        COMMAND "${GLUA_GENERATE}" "${input}" | clang-format > "${output}"
+        COMMENT "Generating Glua functions"
+        VERBATIM
+    )
+    add_custom_target(${target} ALL DEPENDS "${output}")
+endfunction()

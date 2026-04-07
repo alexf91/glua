@@ -1,5 +1,5 @@
 # Custom
-/build*
+build*
 
 # Python
 __pycache__

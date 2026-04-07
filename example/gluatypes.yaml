@@ -1,0 +1,9 @@
+---
+name: Foo
+fields:
+    - name: fooInt
+      type: Integer
+    - name: fooNumber
+      type: Number
+    - name: fooString
+      type: String
