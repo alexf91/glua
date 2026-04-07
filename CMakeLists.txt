@@ -12,15 +12,8 @@ set(GLUA_MODULE_PATH
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(FetchContent)
 
-if (NOT TARGET lua::lua)
-  message("Lua not provided. Looking for package...")
-  find_package(lua REQUIRED)
-endif()
-
-if (NOT TARGET stb::stb)
-  message("STB not provided. Looking for package...")
-  find_package(stb REQUIRED)
-endif()
+find_package(lua REQUIRED)
+find_package(stb REQUIRED)
 
 # Add library and optional tests.
 add_subdirectory(src/glua)

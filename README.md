@@ -3,14 +3,6 @@
 Glua is a glue code generator for C and Lua.
 It is powered by [Mako](https://www.makotemplates.org/).
 
-## Usage
-
-Define an interface in a YAML file.
-See `tests/gluatypes.yaml` as an example.
-
-The C header is then generated with `tools/glua-generate.sh`.
-See `tests/CMakeLists.txt` as an example.
-
 ## Building
 
 The library can be built with CMake:
@@ -29,3 +21,20 @@ The following targets can be provided:
 - `stb::stb` for [STB](http://github.com/nothings/stb)
 
 ## Usage
+
+Define an interface in a YAML file.
+See `tests/gluatypes.yaml` as an example.
+
+Add it to the project by including `Glua` and generate a target with `glua_target()`.
+
+```cmake
+list(APPEND CMAKE_MODULE_PATH "${GLUA_MODULE_PATH}")
+include(Glua)
+
+# Create the target.
+glua_target(
+  gluatypes
+  "${CMAKE_CURRENT_SOURCE_DIR}/gluatypes.yaml"
+  "${CMAKE_CURRENT_BINARY_DIR}/generated/gluatypes.h"
+)
+```
