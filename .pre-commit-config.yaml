@@ -13,26 +13,26 @@ repos:
                 - mdformat-ruff
                 - ruff
     - repo: https://github.com/pre-commit/mirrors-clang-format
-      rev: v21.1.8
+      rev: v22.1.2
       hooks:
           - id: clang-format
             exclude_types: [jupyter]
     - repo: https://github.com/JohnnyMorganz/StyLua
-      rev: v2.3.1
+      rev: v2.4.1
       hooks:
           - id: stylua
     - repo: https://github.com/astral-sh/ruff-pre-commit
-      rev: v0.14.11
+      rev: v0.15.9
       hooks:
           - id: ruff-check
             args: [--fix]
           - id: ruff-format
     - repo: https://github.com/adrienverge/yamllint.git
-      rev: v1.21.0
+      rev: v1.38.0
       hooks:
           - id: yamllint
             args: [--format, parsable, --strict]
     - repo: https://github.com/jumanjihouse/pre-commit-hook-yamlfmt
-      rev: 0.2.1
+      rev: 0.2.3
       hooks:
           - id: yamlfmt
