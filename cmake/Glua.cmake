@@ -3,8 +3,9 @@
 set(GLUA_TOOLS "${CMAKE_CURRENT_LIST_DIR}/../tools")
 
 # Create a target for a Glua header file.
-# <input> is a YAML file with the specification and <output> the generated header file.
-function(glua_target target input output)
+# * <inputs> is semicolon separated list of YAML schema files
+# * <output> is the generated header file
+function(glua_target target inputs output)
     set(GLUA_GENERATE "${GLUA_TOOLS}/glua-generate.sh")
     file(GLOB GLUA_MODULE_FILES CONFIGURE_DEPENDS
         "${GLUA_TOOLS}/glua/*.py"
@@ -13,9 +14,9 @@ function(glua_target target input output)
     get_filename_component(outdir "${output}" DIRECTORY)
     add_custom_command(
         OUTPUT "${output}"
-        DEPENDS "${input}" ${GLUA_GENERATE} ${GLUA_MODULE_FILES}
+        DEPENDS ${inputs} ${GLUA_GENERATE} ${GLUA_MODULE_FILES}
         COMMAND mkdir -p "${outdir}"
-        COMMAND "${GLUA_GENERATE}" "${input}" | clang-format > "${output}"
+        COMMAND "${GLUA_GENERATE}" ${inputs} | clang-format > "${output}"
         COMMENT "Generating Glua functions"
         VERBATIM
     )

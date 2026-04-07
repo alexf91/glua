@@ -1,0 +1,9 @@
+---
+name: Bar
+fields:
+    - name: barInt
+      type: Integer
+    - name: barNumber
+      type: Number
+    - name: barString
+      type: String
