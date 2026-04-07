@@ -4,21 +4,16 @@ cmake_minimum_required(VERSION 3.20)
 project(glua C)
 
 # General configuration.
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(FetchContent)
 
-# Download dependencies and setup targets if necessary.
-set(STB_COMMIT master)
-FetchContent_Declare(
-  stb
-  DOWNLOAD_EXTRACT_TIMESTAMP NEW
-  URL https://github.com/nothings/stb/archive/${STB_COMMIT}.tar.gz
-)
-FetchContent_MakeAvailable(stb)
-add_library(stb INTERFACE)
-target_include_directories(stb SYSTEM INTERFACE ${stb_SOURCE_DIR})
+if (NOT TARGET stb)
+  message("STB not provided. Looking for package...")
+  find_package(stb REQUIRED)
+endif()
 
-# Add library and optionall tests.
+# Add library and optional tests.
 add_subdirectory(src/glua)
 option(WITH_TESTS "Build with tests" OFF)
 if (WITH_TESTS)
