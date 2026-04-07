@@ -1,0 +1,93 @@
+---
+# Struct with base types.
+name: BaseType
+fields:
+    - name: valueInteger
+      type: Integer
+    - name: valueNumber
+      type: Number
+    - name: valueString
+      type: String
+---
+# Struct with nested structs.
+name: ComplexType
+fields:
+    - name: baseA
+      type: BaseType
+    - name: baseB
+      type: BaseType
+---
+# Struct with optional base types.
+name: BaseTypeOpt
+fields:
+    - name: valueInteger
+      type: Integer
+      optional: true
+    - name: valueNumber
+      type: Number
+      optional: true
+    - name: valueString
+      type: String
+      optional: true
+---
+# Struct with optional nested structs with no optional fields.
+# Incomplete member structs should produce an error.
+name: ComplexTypeOptNoOpt
+fields:
+    - name: baseA
+      type: BaseType
+      optional: true
+    - name: baseB
+      type: BaseType
+      optional: true
+---
+# Struct with optional nested structs with optional fields.
+# Incomplete member structs should not produce an error.
+name: ComplexTypeOptOpt
+fields:
+    - name: baseA
+      type: BaseTypeOpt
+      optional: true
+    - name: baseB
+      type: BaseTypeOpt
+      optional: true
+---
+# Struct that contains a dynamic array.
+# The number of elements is stored in `valuesCount`.
+name: ArrayType
+arrays:
+    - name: values
+      type: Integer
+      length: valuesCount
+---
+# Struct that contains a dynamic array.
+name: DArrayType
+arrays:
+    - name: values
+      type: Integer
+      dynamic: true
+---
+# Struct with an optional array field.
+name: ArrayTypeOpt
+arrays:
+    - name: values
+      type: Integer
+      length: valuesCount
+      optional: true
+---
+# Union type.
+name: UnionType
+unions:
+    - name: value
+      types: [Integer, Number, String, BaseType]
+      fields: [valueInteger, valueNumber, valueString, valueBaseType]
+      index: index
+---
+# Union type with optional union field.
+name: UnionTypeOpt
+unions:
+    - name: value
+      types: [Integer, Number]
+      fields: [valueInteger, valueNumber]
+      index: index
+      optional: true
