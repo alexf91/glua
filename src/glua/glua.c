@@ -157,3 +157,12 @@ int GluaPushBoolean(lua_State *L, bool value) {
     lua_pushboolean(L, value);
     return GLUA_OK;
 }
+
+GLUA_READ_ARRAY_FUNCTION(Boolean, bool)
+GLUA_PUSH_ARRAY_FUNCTION(Boolean, bool)
+GLUA_FREE_ARRAY_FUNCTION(Boolean, bool)
+#ifdef GLUA_ENABLE_STB
+GLUA_READ_DARRAY_FUNCTION(Boolean, bool)
+GLUA_PUSH_DARRAY_FUNCTION(Boolean, bool)
+GLUA_FREE_DARRAY_FUNCTION(Boolean, bool)
+#endif /* GLUA_ENABLE_STB */
