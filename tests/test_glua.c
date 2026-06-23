@@ -478,6 +478,11 @@ void test_push_union_type_index_error(void) {
     TEST_ASSERT_EQUAL_INT(top, lua_gettop(L));
 }
 
+void test_free_union_type_opt_absent(void) {
+    UnionTypeOpt tp = {.index = -1};
+    GluaFreeUnionTypeOpt(L, tp);
+}
+
 void test_push_union_type_opt(void) {
     int top = lua_gettop(L);
     UnionTypeOpt wtp = {.index = -1};
@@ -525,6 +530,7 @@ int main(void) {
     RUN_TEST(test_push_union_type);
     RUN_TEST(test_push_union_type_index_error);
     RUN_TEST(test_push_union_type_opt);
+    RUN_TEST(test_free_union_type_opt_absent);
 
     return UNITY_END();
 }

@@ -9,7 +9,7 @@
 import sys
 from glua.types import ArrayDef, FieldDef, UnionDef
 
-def temptype(typename : str) -> str | str:
+def temptype(typename : str) -> str:
     """Map a type to a temporary intermediate type."""
     if typename == "Integer":
         return "lua_Integer"
@@ -246,6 +246,8 @@ static inline void GluaFree${tp.name}(lua_State *L, ${tp.name} value) {
                     GluaFree${ftype}(L, value.${fname});
                     break;
             % endfor
+                default:
+                    assert(value.${field.index} == -1);
             }
         % endif
     % endfor
