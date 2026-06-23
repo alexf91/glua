@@ -278,6 +278,61 @@ void test_read_array_string(void) {
     GluaFreeArrayString(L, values, count);
 }
 
+// Read an integer array from a non-top stack position.
+void test_read_array_integer_non_top(void) {
+    lua_Integer *values;
+    size_t count;
+    int top = lua_gettop(L);
+    // Push dummy values to shift the table down.
+    lua_pushinteger(L, 99);
+    lua_pushinteger(L, 100);
+    const char *program = "return {42, 43, 44}";
+    TEST_ASSERT_EQUAL(LUA_OK, luaL_dostring(L, program));
+    // Table is at -1 (top), dummies at -2 and -3.
+    // Duplicate the table to preserve it for checking stack state.
+    lua_pushvalue(L, -1);
+    // Read the table at -2 (below the duplicate).
+    TEST_ASSERT_EQUAL(GLUA_OK, GluaReadArrayInteger(L, -2, &values, &count));
+    // Pop the duplicate table.
+    lua_pop(L, 1);
+    // Pop the original table.
+    lua_pop(L, 1);
+    // Pop the dummy values.
+    lua_pop(L, 2);
+    // Stack should be back to original state.
+    TEST_ASSERT_EQUAL_INT(top, lua_gettop(L));
+
+    TEST_ASSERT_EQUAL(3, count);
+    TEST_ASSERT_EQUAL(42, values[0]);
+    TEST_ASSERT_EQUAL(43, values[1]);
+    TEST_ASSERT_EQUAL(44, values[2]);
+
+    GluaFreeArrayInteger(L, values, count);
+}
+
+// Read a string array from a non-top stack position.
+void test_read_array_string_non_top(void) {
+    char **values;
+    size_t count;
+    int top = lua_gettop(L);
+    lua_pushinteger(L, 99);
+    const char *program = "return {'X', 'Y', 'Z'}";
+    TEST_ASSERT_EQUAL(LUA_OK, luaL_dostring(L, program));
+    lua_pushvalue(L, -1);
+    TEST_ASSERT_EQUAL(GLUA_OK, GluaReadArrayString(L, -2, &values, &count));
+    lua_pop(L, 1);
+    lua_pop(L, 1);
+    lua_pop(L, 1);
+    TEST_ASSERT_EQUAL_INT(top, lua_gettop(L));
+
+    TEST_ASSERT_EQUAL(3, count);
+    TEST_ASSERT_EQUAL_STRING("X", values[0]);
+    TEST_ASSERT_EQUAL_STRING("Y", values[1]);
+    TEST_ASSERT_EQUAL_STRING("Z", values[2]);
+
+    GluaFreeArrayString(L, values, count);
+}
+
 void test_union_type(void) {
     UnionType tp;
     const char *program = "return {index = 1, value = 42.43}";
@@ -511,6 +566,8 @@ int main(void) {
     RUN_TEST(test_array_type_opt);
     RUN_TEST(test_read_array_integer);
     RUN_TEST(test_read_array_string);
+    RUN_TEST(test_read_array_integer_non_top);
+    RUN_TEST(test_read_array_string_non_top);
     RUN_TEST(test_union_type);
     RUN_TEST(test_union_type_opt);
     RUN_TEST(test_union_type_index_error);

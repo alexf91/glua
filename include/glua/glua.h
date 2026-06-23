@@ -40,7 +40,7 @@ enum GluaStatusCode {
         *values = calloc(length, sizeof(**values));                                    \
         assert(*values);                                                               \
         for (size_t i = 0; i < length; i++) {                                          \
-            lua_geti(L, -1, i + 1);                                                    \
+            lua_geti(L, idx, i + 1);                                                     \
             int status = GluaRead##luatype(L, -1, *values + i);                        \
             lua_pop(L, 1);                                                             \
             if (status != GLUA_OK) {                                                   \
