@@ -79,6 +79,8 @@ GLUA_FREE_DARRAY_FUNCTION(Number, lua_Number)
 int GluaReadString(lua_State *L, int idx, char **value) {
     int status = GLUA_OK;
     *value = nullptr;
+    if (!lua_isstring(L, idx))
+        return lua_isnil(L, idx) ? GLUA_NIL_ERROR : GLUA_TYPE_ERROR;
     // Operate on a copy of the value at `idx`.
     lua_pushvalue(L, idx);
 
@@ -144,6 +146,8 @@ GLUA_FREE_DARRAY_FUNCTION(LuaRef, int)
 #endif /* GLUA_ENABLE_STB */
 
 int GluaReadBoolean(lua_State *L, int idx, bool *value) {
+    if (!lua_isboolean(L, idx))
+        return lua_isnil(L, idx) ? GLUA_NIL_ERROR : GLUA_TYPE_ERROR;
     *value = lua_toboolean(L, idx);
     return GLUA_OK;
 }

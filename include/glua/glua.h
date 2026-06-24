@@ -2,7 +2,11 @@
 
 #pragma once
 
+#include <assert.h>
+#include <lauxlib.h>
 #include <lua.h>
+#include <stdlib.h>
+#include <string.h>
 
 #ifdef GLUA_ENABLE_STB
 #include <stb_ds.h>
@@ -35,12 +39,13 @@ enum GluaStatusCode {
  */
 #define GLUA_READ_ARRAY_FUNCTION(luatype, ctype)                                       \
     int GluaReadArray##luatype(lua_State *L, int idx, ctype **values, size_t *count) { \
-        size_t length = luaL_len(L, idx);                                              \
+        lua_Integer length = luaL_len(L, idx);                                         \
+        assert(length >= 0);                                                           \
         *count = 0;                                                                    \
         *values = calloc(length, sizeof(**values));                                    \
         assert(*values);                                                               \
-        for (size_t i = 0; i < length; i++) {                                          \
-            lua_geti(L, idx, i + 1);                                                     \
+        for (lua_Integer i = 0; i < length; i++) {                                     \
+            lua_geti(L, idx, i + 1);                                                   \
             int status = GluaRead##luatype(L, -1, *values + i);                        \
             lua_pop(L, 1);                                                             \
             if (status != GLUA_OK) {                                                   \

@@ -139,7 +139,7 @@ class UnionDef(BaseDef):
     REQUIRED_FIELDS: ClassVar[set[str]] = {"name", "types", "fields", "index"}
 
     @classmethod
-    def from_yaml(cls, doc: dict[str, Any]) -> ArrayDef:
+    def from_yaml(cls, doc: dict[str, Any]) -> UnionDef:
         """Create a field description from the YAML document."""
         cls.check_fields(doc)
         if len(doc["types"]) != len(doc["fields"]):
