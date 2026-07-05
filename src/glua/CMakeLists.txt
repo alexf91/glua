@@ -12,3 +12,5 @@ if(GLUA_ENABLE_STB)
     target_compile_definitions(glua PUBLIC GLUA_ENABLE_STB)
     target_link_libraries(glua PUBLIC stb::stb)
 endif()
+
+add_library(glua::glua ALIAS glua)

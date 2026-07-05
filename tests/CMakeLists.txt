@@ -9,7 +9,7 @@ function(add_test name)
     target_compile_features(${name} PUBLIC c_std_23)
     set_property(TARGET ${name} PROPERTY C_STANDARD 23)
     target_include_directories(${name} PUBLIC ${CMAKE_SOURCE_DIR}/include)
-    target_link_libraries(${name} PUBLIC m unity::framework glua)
+    target_link_libraries(${name} PUBLIC m unity::framework glua::glua)
     target_include_directories(${name} PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
 endfunction()
 
