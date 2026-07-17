@@ -16,7 +16,7 @@ def main() -> int:
     args = parser.parse_args()
 
     dirname = os.path.dirname(__file__)
-    template = Template(filename=os.path.join(dirname, "glua.mako"))
+    template = Template(filename=os.path.join(dirname, "c.mako"))
 
     default_headers = set(
         [
