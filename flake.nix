@@ -22,13 +22,18 @@
             pkg-config
           ];
 
-          buildInputs = with pkgs; [
+          # Dependencies inherited by downstream consumers.
+          # Those are always necessary for consumers.
+          propagatedBuildInputs = with pkgs; [
             lua5_5
-            stb
             (python3.withPackages (python-pkgs: [
               python-pkgs.mako
               python-pkgs.pyyaml
             ]))
+          ];
+
+          buildInputs = with pkgs; [
+            stb
           ];
         in
         {
@@ -38,7 +43,7 @@
             version = "unstable";
             src = ./.;
 
-            inherit nativeBuildInputs buildInputs;
+            inherit nativeBuildInputs propagatedBuildInputs buildInputs;
           };
 
           # Developer configuration.
@@ -51,7 +56,7 @@
                 rustup
               ]);
 
-            inherit buildInputs;
+            inherit propagatedBuildInputs buildInputs;
           };
         };
     };
