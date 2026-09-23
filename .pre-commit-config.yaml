@@ -13,16 +13,16 @@ repos:
                 - mdformat-ruff
                 - ruff
     - repo: https://github.com/pre-commit/mirrors-clang-format
-      rev: v22.1.2
+      rev: v23.1.1
       hooks:
           - id: clang-format
             exclude_types: [jupyter]
     - repo: https://github.com/JohnnyMorganz/StyLua
-      rev: v2.4.1
+      rev: v2.5.2
       hooks:
           - id: stylua
     - repo: https://github.com/astral-sh/ruff-pre-commit
-      rev: v0.15.9
+      rev: v0.16.8
       hooks:
           - id: ruff-check
             args: [--fix]
