@@ -18,7 +18,7 @@
         # Package configuration.
         packages.default = pkgs.stdenv.mkDerivation {
           pname = "glua";
-          version = "unstable";
+          version = "0.1.0";
 
           src = ./.;
 
@@ -33,6 +33,7 @@
             stb
             (python3.withPackages (python-pkgs: [
               python-pkgs.mako
+              python-pkgs.pyyaml
             ]))
           ];
         };
@@ -53,6 +54,7 @@
             stb
             (python3.withPackages (python-pkgs: [
               python-pkgs.mako
+              python-pkgs.pyyaml
             ]))
           ];
         };
