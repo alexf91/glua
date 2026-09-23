@@ -27,3 +27,21 @@ if (GLUA_ENABLE_TESTS)
     endif()
     add_subdirectory(tests)
 endif()
+
+include(GNUInstallDirs)
+
+# Install the CMake module and code generator required by consumers.
+# These are placed relative to each other so that Glua.cmake can locate the
+# tools via the `../tools` path relative to its own location.
+install(
+    FILES cmake/Glua.cmake
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/glua/cmake
+)
+install(
+    PROGRAMS tools/glua-generate.sh
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/glua/tools
+)
+install(
+    DIRECTORY tools/glua/
+    DESTINATION ${CMAKE_INSTALL_DATADIR}/glua/tools/glua
+)

@@ -14,3 +14,12 @@ if(GLUA_ENABLE_STB)
 endif()
 
 add_library(glua::glua ALIAS glua)
+
+include(GNUInstallDirs)
+
+# Install the library and its public header.
+install(TARGETS glua ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+install(
+    FILES ${PROJECT_SOURCE_DIR}/include/glua/glua.h
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/glua
+)
