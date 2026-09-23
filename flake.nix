@@ -14,14 +14,8 @@
         "aarch64-linux"
       ];
 
-      perSystem = { pkgs, ... }: {
-        # Package configuration.
-        packages.default = pkgs.stdenv.mkDerivation {
-          pname = "glua";
-          version = "0.1.0";
-
-          src = ./.;
-
+      perSystem = { pkgs, ... }:
+        let
           nativeBuildInputs = with pkgs; [
             cmake
             ninja
@@ -36,28 +30,30 @@
               python-pkgs.pyyaml
             ]))
           ];
-        };
+        in
+        {
+          # Package configuration.
+          packages.default = pkgs.stdenv.mkDerivation {
+            pname = "glua";
+            version = "0.1.0";
 
-        # Developer configuration.
-        devShells.default = pkgs.mkShell {
-          packages = with pkgs; [
-            clang-tools
-            cmake
-            ninja
-            pkg-config
-            pre-commit
-            rustup
-          ];
+            src = ./.;
 
-          buildInputs = with pkgs; [
-            lua5_5
-            stb
-            (python3.withPackages (python-pkgs: [
-              python-pkgs.mako
-              python-pkgs.pyyaml
-            ]))
-          ];
+            inherit nativeBuildInputs buildInputs;
+          };
+
+          # Developer configuration.
+          devShells.default = pkgs.mkShell {
+            packages =
+              nativeBuildInputs
+              ++ (with pkgs; [
+                clang-tools
+                pre-commit
+                rustup
+              ]);
+
+            inherit buildInputs;
+          };
         };
-      };
     };
 }
