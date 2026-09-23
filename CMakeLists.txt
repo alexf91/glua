@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.20)
-project(glua C)
+project(glua VERSION 0.1.0 LANGUAGES C)
 
 # General configuration.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -44,4 +44,17 @@ install(
 install(
     DIRECTORY tools/glua/
     DESTINATION ${CMAKE_INSTALL_DATADIR}/glua/tools/glua
+)
+
+# Generate and install the pkg-config file.
+set(GLUA_PC_REQUIRES "lua")
+set(GLUA_PC_CFLAGS "")
+if (GLUA_ENABLE_STB)
+    string(APPEND GLUA_PC_REQUIRES " stb")
+    set(GLUA_PC_CFLAGS " -DGLUA_ENABLE_STB")
+endif()
+configure_file(glua.pc.in glua.pc @ONLY)
+install(
+    FILES ${CMAKE_CURRENT_BINARY_DIR}/glua.pc
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig
 )

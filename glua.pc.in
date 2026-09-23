@@ -1,0 +1,11 @@
+prefix=@CMAKE_INSTALL_PREFIX@
+exec_prefix=${prefix}
+libdir=${exec_prefix}/@CMAKE_INSTALL_LIBDIR@
+includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
+
+Name: glua
+Description: A glue code generator for C and Lua
+Version: @PROJECT_VERSION@
+Requires: @GLUA_PC_REQUIRES@
+Cflags: -I${includedir}@GLUA_PC_CFLAGS@
+Libs: -L${libdir} -lglua
