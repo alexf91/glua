@@ -5,6 +5,7 @@ includedir=@CMAKE_INSTALL_FULL_INCLUDEDIR@
 
 Name: glua
 Description: A glue code generator for C and Lua
+Version: @PROJECT_VERSION@
 Requires: @GLUA_PC_REQUIRES@
 Cflags: -I${includedir}@GLUA_PC_CFLAGS@
 Libs: -L${libdir} -lglua

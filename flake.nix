@@ -40,7 +40,7 @@
           # Package configuration.
           packages.default = pkgs.stdenv.mkDerivation {
             pname = "glua";
-            version = "unstable";
+            version = "0.5.0";
             src = ./.;
 
             inherit nativeBuildInputs propagatedBuildInputs buildInputs;

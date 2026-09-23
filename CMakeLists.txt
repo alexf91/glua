@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 cmake_minimum_required(VERSION 3.20)
-project(glua LANGUAGES C)
+project(glua VERSION 0.5.0 LANGUAGES C)
 
 # General configuration.
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
