@@ -26,14 +26,11 @@
           # Those are always necessary for consumers.
           propagatedBuildInputs = with pkgs; [
             lua5_5
+            stb
             (python3.withPackages (python-pkgs: [
               python-pkgs.mako
               python-pkgs.pyyaml
             ]))
-          ];
-
-          buildInputs = with pkgs; [
-            stb
           ];
         in
         {
@@ -43,7 +40,7 @@
             version = "0.5.0";
             src = ./.;
 
-            inherit nativeBuildInputs propagatedBuildInputs buildInputs;
+            inherit nativeBuildInputs propagatedBuildInputs;
           };
 
           # Developer configuration.
@@ -56,7 +53,7 @@
                 rustup
               ]);
 
-            inherit propagatedBuildInputs buildInputs;
+            inherit propagatedBuildInputs;
           };
         };
     };
