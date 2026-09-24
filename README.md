@@ -27,11 +27,11 @@ Support for dynamic arrays is enabled by default, but can be deactivated by sett
 Define an interface in a YAML file.
 See `tests/gluatypes.yaml` as an example.
 
-Load the installed package with `find_package(Glua)` and generate a target
+Load the installed package with `find_package(glua)` and generate a target
 with `glua_target()`:
 
 ```cmake
-find_package(Glua CONFIG REQUIRED)
+find_package(glua CONFIG REQUIRED)
 
 # Create the target.
 glua_target(
@@ -44,5 +44,5 @@ glua_target(
 target_link_libraries(my_target PRIVATE glua::glua)
 ```
 
-`find_package(Glua)` provides the `glua::glua` library target and the
+`find_package(glua)` provides the `glua::glua` library target and the
 `glua_target()` function.

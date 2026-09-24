@@ -1,7 +1,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 # Generate the glua file for test_glua.
-include(Glua)
+include(glua)
 
 function(add_test name)
     add_executable(${name} ${name}.c)

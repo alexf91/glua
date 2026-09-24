@@ -31,7 +31,7 @@ endif()
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
-set(GLUA_CMAKE_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/Glua")
+set(GLUA_CMAKE_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/glua")
 set(GLUA_TOOLS_DIR "${CMAKE_INSTALL_DATADIR}/glua/tools")
 
 # Install the code generator required by consumers.
@@ -46,21 +46,21 @@ install(
 
 # Install the CMake package: config, version, module and dependency finders.
 configure_package_config_file(
-    cmake/GluaConfig.cmake.in
-    ${CMAKE_CURRENT_BINARY_DIR}/GluaConfig.cmake
+    cmake/glua-config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/glua-config.cmake
     INSTALL_DESTINATION ${GLUA_CMAKE_INSTALL_DIR}
     PATH_VARS GLUA_TOOLS_DIR
 )
 write_basic_package_version_file(
-    ${CMAKE_CURRENT_BINARY_DIR}/GluaConfigVersion.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/glua-config-version.cmake
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY SameMajorVersion
 )
 install(
     FILES
-        ${CMAKE_CURRENT_BINARY_DIR}/GluaConfig.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/GluaConfigVersion.cmake
-        cmake/Glua.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/glua-config.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/glua-config-version.cmake
+        cmake/glua.cmake
         cmake/Findlua.cmake
         cmake/Findstb.cmake
     DESTINATION ${GLUA_CMAKE_INSTALL_DIR}

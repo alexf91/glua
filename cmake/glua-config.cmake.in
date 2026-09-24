@@ -18,6 +18,6 @@ include("${CMAKE_CURRENT_LIST_DIR}/gluaTargets.cmake")
 set_and_check(GLUA_TOOLS "@PACKAGE_GLUA_TOOLS_DIR@")
 
 # Code generation function glua_target().
-include("${CMAKE_CURRENT_LIST_DIR}/Glua.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/glua.cmake")
 
-check_required_components(Glua)
+check_required_components(glua)

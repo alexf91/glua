@@ -6,10 +6,10 @@ project(glua-example C)
 # General configuration.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# Load the installed Glua package.
+# Load the installed glua package.
 # This provides both the `glua::glua` library target and the `glua_target()`
 # code generation function.
-find_package(Glua CONFIG REQUIRED)
+find_package(glua CONFIG REQUIRED)
 
 # Create the target.
 file(GLOB GLUA_SCHEMAS CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/*.yaml")
