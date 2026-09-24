@@ -29,21 +29,46 @@ if (GLUA_ENABLE_TESTS)
 endif()
 
 include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
 
-# Install the CMake module and code generator required by consumers.
-# These are placed relative to each other so that Glua.cmake can locate the
-# tools via the `../tools` path relative to its own location.
-install(
-    FILES cmake/Glua.cmake
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/glua/cmake
-)
+set(GLUA_CMAKE_INSTALL_DIR "${CMAKE_INSTALL_LIBDIR}/cmake/Glua")
+set(GLUA_TOOLS_DIR "${CMAKE_INSTALL_DATADIR}/glua/tools")
+
+# Install the code generator required by consumers.
 install(
     PROGRAMS tools/glua-generate.sh
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/glua/tools
+    DESTINATION ${GLUA_TOOLS_DIR}
 )
 install(
     DIRECTORY tools/glua/
-    DESTINATION ${CMAKE_INSTALL_DATADIR}/glua/tools/glua
+    DESTINATION ${GLUA_TOOLS_DIR}/glua
+)
+
+# Install the CMake package: config, version, module and dependency finders.
+configure_package_config_file(
+    cmake/GluaConfig.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/GluaConfig.cmake
+    INSTALL_DESTINATION ${GLUA_CMAKE_INSTALL_DIR}
+    PATH_VARS GLUA_TOOLS_DIR
+)
+write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/GluaConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+install(
+    FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/GluaConfig.cmake
+        ${CMAKE_CURRENT_BINARY_DIR}/GluaConfigVersion.cmake
+        cmake/Glua.cmake
+        cmake/Findlua.cmake
+        cmake/Findstb.cmake
+    DESTINATION ${GLUA_CMAKE_INSTALL_DIR}
+)
+install(
+    EXPORT gluaTargets
+    NAMESPACE glua::
+    DESTINATION ${GLUA_CMAKE_INSTALL_DIR}
 )
 
 # Generate and install the pkg-config file.

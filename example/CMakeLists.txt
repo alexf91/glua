@@ -5,19 +5,11 @@ project(glua-example C)
 
 # General configuration.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-include(FetchContent)
 
-# Download Glua.
-# In a regular project, this would be the path to this repository.
-FetchContent_Declare(
-    glua
-    GIT_REPOSITORY "file://${CMAKE_CURRENT_LIST_DIR}/.."
-    GIT_TAG main
-)
-FetchContent_MakeAvailable(glua)
-
-list(APPEND CMAKE_MODULE_PATH "${GLUA_MODULE_PATH}")
-include(Glua)
+# Load the installed Glua package.
+# This provides both the `glua::glua` library target and the `glua_target()`
+# code generation function.
+find_package(Glua CONFIG REQUIRED)
 
 # Create the target.
 file(GLOB GLUA_SCHEMAS CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/*.yaml")
