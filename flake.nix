@@ -3,48 +3,60 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    flake-parts.url = "github:hercules-ci/flake-parts";
   };
 
   outputs =
-    inputs@{ flake-parts, ... }:
-    flake-parts.lib.mkFlake { inherit inputs; } {
-      systems = [
-        "x86_64-linux"
-        "aarch64-linux"
-      ];
+    { self, nixpkgs, ... }:
+    let
+      forAllSystems =
+        function:
+        nixpkgs.lib.genAttrs [ "x86_64-linux" "aarch64-linux" ] (
+          system: function nixpkgs.legacyPackages.${system}
+        );
 
-      perSystem = { pkgs, ... }:
+      # Common dependencies for the package and the dev shell.
+      deps = pkgs: {
+        nativeBuildInputs = with pkgs; [
+          cmake
+          ninja
+          pkg-config
+        ];
+
+        propagatedBuildInputs = with pkgs; [
+          lua5_5
+          stb
+          (python3.withPackages (python-pkgs: [
+            python-pkgs.mako
+            python-pkgs.pyyaml
+          ]))
+        ];
+      };
+    in
+    {
+      # Generate packages for all systems.
+      packages = forAllSystems (
+        pkgs:
         let
-          nativeBuildInputs = with pkgs; [
-            cmake
-            ninja
-            pkg-config
-          ];
-
-          # Dependencies inherited by downstream consumers.
-          # Those are always necessary for consumers.
-          propagatedBuildInputs = with pkgs; [
-            lua5_5
-            stb
-            (python3.withPackages (python-pkgs: [
-              python-pkgs.mako
-              python-pkgs.pyyaml
-            ]))
-          ];
+          inherit (deps pkgs) nativeBuildInputs propagatedBuildInputs;
         in
         {
-          # Package configuration.
-          packages.default = pkgs.stdenv.mkDerivation {
+          default = pkgs.stdenv.mkDerivation {
             pname = "glua";
             version = "0.5.0";
             src = ./.;
-
             inherit nativeBuildInputs propagatedBuildInputs;
           };
+        }
+      );
 
-          # Developer configuration.
-          devShells.default = pkgs.mkShell {
+      # Generate dev shells for all systems.
+      devShells = forAllSystems (
+        pkgs:
+        let
+          inherit (deps pkgs) nativeBuildInputs propagatedBuildInputs;
+        in
+        {
+          default = pkgs.mkShell {
             packages =
               nativeBuildInputs
               ++ (with pkgs; [
@@ -52,9 +64,9 @@
                 pre-commit
                 rustup
               ]);
-
             inherit propagatedBuildInputs;
           };
-        };
+        }
+      );
     };
 }
