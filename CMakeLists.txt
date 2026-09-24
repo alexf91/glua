@@ -11,11 +11,12 @@ set(GLUA_MODULE_PATH
 )
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(lua REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(lua REQUIRED IMPORTED_TARGET GLOBAL lua)
 
 option(GLUA_ENABLE_STB "Build with STB functions" ON)
 if (GLUA_ENABLE_STB)
-    find_package(stb REQUIRED)
+    pkg_check_modules(stb REQUIRED IMPORTED_TARGET GLOBAL stb)
 endif()
 
 add_subdirectory(src/glua)
@@ -61,8 +62,6 @@ install(
         ${CMAKE_CURRENT_BINARY_DIR}/glua-config.cmake
         ${CMAKE_CURRENT_BINARY_DIR}/glua-config-version.cmake
         cmake/glua.cmake
-        cmake/Findlua.cmake
-        cmake/Findstb.cmake
     DESTINATION ${GLUA_CMAKE_INSTALL_DIR}
 )
 install(

@@ -9,7 +9,7 @@
 
 #ifdef GLUA_ENABLE_STB
 #define STB_DS_IMPLEMENTATION
-#include <stb_ds.h>
+#include <stb/stb_ds.h>
 #endif /* GLUA_ENABLE_STB */
 
 static_assert(LUA_VERSION_NUM == 505);

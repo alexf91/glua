@@ -11,11 +11,11 @@ target_include_directories(glua PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
-target_link_libraries(glua PUBLIC lua::lua)
+target_link_libraries(glua PUBLIC lua)
 
 if(GLUA_ENABLE_STB)
     target_compile_definitions(glua PUBLIC GLUA_ENABLE_STB)
-    target_link_libraries(glua PUBLIC stb::stb)
+    target_link_libraries(glua PUBLIC stb)
 endif()
 
 add_library(glua::glua ALIAS glua)

@@ -5,7 +5,7 @@
 #include <glua/glua.h>
 #include <lauxlib.h>
 #include <lua.h>
-#include <stb_ds.h>
+#include <stb/stb_ds.h>
 #include <unity.h>
 
 // State of the Lua interpreter used throughout tests.

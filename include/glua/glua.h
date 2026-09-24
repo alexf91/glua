@@ -10,7 +10,7 @@
 #include <string.h>
 
 #ifdef GLUA_ENABLE_STB
-#include <stb_ds.h>
+#include <stb/stb_ds.h>
 #endif /* GLUA_ENABLE_STB */
 
 typedef lua_Integer Integer;
