@@ -1,6 +1,7 @@
 # Custom
 build*
 result
+tests-zig/gluatypes.zig
 
 # Python
 __pycache__

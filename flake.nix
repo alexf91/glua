@@ -25,6 +25,7 @@
 
         propagatedBuildInputs = with pkgs; [
           lua5_5
+          zig_0_17
           stb
           (python3.withPackages (python-pkgs: [
             python-pkgs.mako

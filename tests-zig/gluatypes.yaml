@@ -1,0 +1,10 @@
+---
+# Struct with base types.
+name: BaseType
+fields:
+    - name: valueInteger
+      type: Integer
+    - name: valueNumber
+      type: Number
+    - name: valueString
+      type: String
