@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
 
+#define STB_DS_IMPLEMENTATION
+
 #include "gluatypes.h"
 #include <generated/glua_stb.h>
 #include <glua/glua.h>
 #include <lauxlib.h>
 #include <lua.h>
-#include <stb/stb_ds.h>
-#include <unity.h>
+#include <unity/unity.h>
 
 // State of the Lua interpreter used throughout tests.
 lua_State *L = nullptr;

@@ -7,11 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#ifdef GLUA_ENABLE_STB
-#define STB_DS_IMPLEMENTATION
-#include <stb/stb_ds.h>
-#endif /* GLUA_ENABLE_STB */
-
 static_assert(LUA_VERSION_NUM == 505);
 
 int GluaReadInteger(lua_State *L, int idx, lua_Integer *value) {

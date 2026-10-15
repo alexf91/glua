@@ -20,6 +20,7 @@
           cmake
           ninja
           pkg-config
+          unity-test
         ];
 
         propagatedBuildInputs = with pkgs; [

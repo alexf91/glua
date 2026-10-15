@@ -23,9 +23,7 @@ add_subdirectory(src/glua)
 
 option(GLUA_ENABLE_TESTS "Build with tests" OFF)
 if (GLUA_ENABLE_TESTS)
-    if (NOT TARGET unity::framework)
-        find_package(unity REQUIRED)
-    endif()
+    pkg_check_modules(unity REQUIRED IMPORTED_TARGET GLOBAL unity)
     add_subdirectory(tests)
 endif()
 
