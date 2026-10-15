@@ -19,12 +19,12 @@ if (GLUA_ENABLE_STB)
     pkg_check_modules(stb REQUIRED IMPORTED_TARGET GLOBAL stb)
 endif()
 
-add_subdirectory(src/glua)
+add_subdirectory(src/glua-c)
 
 option(GLUA_ENABLE_TESTS "Build with tests" OFF)
 if (GLUA_ENABLE_TESTS)
     pkg_check_modules(unity REQUIRED IMPORTED_TARGET GLOBAL unity)
-    add_subdirectory(tests)
+    add_subdirectory(tests-c)
 endif()
 
 include(GNUInstallDirs)
