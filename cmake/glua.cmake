@@ -8,7 +8,7 @@ endif()
 # * <inputs> is semicolon separated list of YAML schema files
 # * <output> is the generated header file
 function(glua_target target inputs output)
-    set(GLUA_GENERATE "${GLUA_TOOLS}/glua-generate.sh")
+    set(GLUA_GENERATE "${GLUA_TOOLS}/glua-generate")
     file(GLOB GLUA_MODULE_FILES CONFIGURE_DEPENDS
         "${GLUA_TOOLS}/glua/*.py"
         "${GLUA_TOOLS}/glua/*.mako"

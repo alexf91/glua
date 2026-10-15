@@ -37,7 +37,7 @@ set(GLUA_TOOLS_DIR "${CMAKE_INSTALL_DATADIR}/glua/tools")
 
 # Install the code generator required by consumers.
 install(
-    PROGRAMS tools/glua-generate.sh
+    PROGRAMS tools/glua-generate
     DESTINATION ${GLUA_TOOLS_DIR}
 )
 install(
