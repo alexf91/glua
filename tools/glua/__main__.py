@@ -9,16 +9,8 @@ from mako.template import Template
 
 from .types import TypeDef
 
-
-def main() -> int:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("schema", nargs="+", help="input YAML schema files")
-    args = parser.parse_args()
-
-    dirname = os.path.dirname(__file__)
-    template = Template(filename=os.path.join(dirname, "c.mako"))
-
-    default_headers = set(
+DEFAULT_HEADERS = {
+    "c": set(
         [
             "glua/glua.h",
             "string.h",
@@ -28,7 +20,19 @@ def main() -> int:
             "stddef.h",
             "lauxlib.h",
         ]
-    )
+    ),
+    "zig": set(),
+}
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--language", "-l", default="c", choices=["c", "zig"])
+    parser.add_argument("schema", nargs="+", help="input YAML schema files")
+    args = parser.parse_args()
+
+    dirname = os.path.dirname(__file__)
+    template = Template(filename=os.path.join(dirname, f"{args.language}.mako"))
 
     types = []
     for path in args.schema:
@@ -37,7 +41,7 @@ def main() -> int:
             for doc in docs:
                 types.append(TypeDef.from_yaml(doc))
 
-    print(template.render(default_headers=default_headers, types=types))
+    print(template.render(default_headers=DEFAULT_HEADERS[args.language], types=types))
 
     return 0
 
