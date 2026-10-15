@@ -152,6 +152,9 @@ class TypeDef(BaseDef):
     """Definition of a type."""
 
     name: str
+    """Name of the type as used for function generation."""
+    iname: str
+    """Internal type name, e.g. `rl.Vector3` in Zig."""
     headers: list[str]
     fields: list[FieldDef]
     arrays: list[ArrayDef]
@@ -159,6 +162,7 @@ class TypeDef(BaseDef):
 
     ALLOWED_FIELDS: ClassVar[set[str]] = {
         "name",
+        "iname",
         "headers",
         "fields",
         "arrays",
@@ -172,6 +176,7 @@ class TypeDef(BaseDef):
         cls.check_fields(doc)
         return cls(
             name=doc["name"],
+            iname=doc.get("iname") or doc["name"],
             headers=doc.get("headers", []),
             fields=[FieldDef.from_yaml(f) for f in doc.get("fields", [])],
             arrays=[ArrayDef.from_yaml(f) for f in doc.get("arrays", [])],

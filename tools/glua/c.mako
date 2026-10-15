@@ -8,28 +8,27 @@
 <%!
 import sys
 from glua.types import ArrayDef, FieldDef, UnionDef
-
-def temptype(typename : str) -> str:
-    """Map a type to a temporary intermediate type."""
-    if typename == "Integer":
-        return "lua_Integer"
-    elif typename == "Number":
-        return "lua_Number"
-    elif typename == "String":
-        return "char *"
-    elif typename == "LuaRef":
-        return "int"
-    elif typename == "Boolean":
-        return "bool"
-
-    return typename
 %>
 
 <%
+# Setup the mapping from Glua types to internal types.
+TYPEMAP = {
+    "Integer": "lua_Integer",
+    "Number": "lua_Number",
+    "String": "char *",
+    "LuaRef": "int",
+    "Boolean": "bool"
+}
+
+def temptype(typename : str) -> str:
+    """Map a type to a temporary intermediate type."""
+    return TYPEMAP.get(typename, typename)
+
 # Get the set of headers.
 headers = default_headers.copy()
 for tp in types:
     headers.update(tp.headers)
+    TYPEMAP[tp.name] = tp.iname
 %>
 
 ## Include necessary headers.
@@ -47,14 +46,14 @@ for tp in types:
  * Returns `GLUA_OK` on success and an error type on error.
  * The stack is cleaned up after an error occurs and the result `value` is set to zero.
  */
-static inline int GluaRead${tp.name}(lua_State *L, int idx, ${tp.name} *value);
+static inline int GluaRead${tp.name}(lua_State *L, int idx, ${tp.iname} *value);
 
 /** Read an array of types `${tp.name}` from the given stack index. */
-static inline int GluaReadArray${tp.name}(lua_State *L, int idx, ${tp.name} **value, size_t *count);
+static inline int GluaReadArray${tp.name}(lua_State *L, int idx, ${tp.iname} **value, size_t *count);
 
 #ifdef GLUA_ENABLE_STB
 /** Read a dynamic array of types `${tp.name}` from the given stack index. */
-static inline int GluaReadDArray${tp.name}(lua_State *L, int idx, ${tp.name} **value);
+static inline int GluaReadDArray${tp.name}(lua_State *L, int idx, ${tp.iname} **value);
 #endif /* GLUA_ENABLE_STB */
 
 /**
@@ -63,7 +62,7 @@ static inline int GluaReadDArray${tp.name}(lua_State *L, int idx, ${tp.name} **v
  * Returns `GLUA_OK` on success and an error type on error.
  * If an error occurs, then nothing is pushed.
  */
-static inline int GluaPush${tp.name}(lua_State *L, ${tp.name} value);
+static inline int GluaPush${tp.name}(lua_State *L, ${tp.iname} value);
 
 /**
  * Push an array of type `${tp.name}` onto the stack.
@@ -71,7 +70,7 @@ static inline int GluaPush${tp.name}(lua_State *L, ${tp.name} value);
  * Returns `GLUA_OK` on success and an error type on error.
  * If an error occurs, then nothing is pushed.
  */
-static inline int GluaPushArray${tp.name}(lua_State *L, ${tp.name} *values, size_t count);
+static inline int GluaPushArray${tp.name}(lua_State *L, ${tp.iname} *values, size_t count);
 
 #ifdef GLUA_ENABLE_STB
 /**
@@ -80,18 +79,18 @@ static inline int GluaPushArray${tp.name}(lua_State *L, ${tp.name} *values, size
  * Returns `GLUA_OK` on success and an error type on error.
  * If an error occurs, then nothing is pushed.
  */
-static inline int GluaPushDArray${tp.name}(lua_State *L, ${tp.name} *values);
+static inline int GluaPushDArray${tp.name}(lua_State *L, ${tp.iname} *values);
 #endif /* GLUA_ENABLE_STB */
 
 /** Free a value of type `${tp.name}`. */
-static inline void GluaFree${tp.name}(lua_State *L, ${tp.name} value);
+static inline void GluaFree${tp.name}(lua_State *L, ${tp.iname} value);
 
 /** Free an array of type `${tp.name}`. */
-static inline void GluaFreeArray${tp.name}(lua_State *L, ${tp.name} *value, size_t count);
+static inline void GluaFreeArray${tp.name}(lua_State *L, ${tp.iname} *value, size_t count);
 
 #ifdef GLUA_ENABLE_STB
 /** Free a dynamic array of type `${tp.name}`. */
-static inline void GluaFreeDArray${tp.name}(lua_State *L, ${tp.name} *value);
+static inline void GluaFreeDArray${tp.name}(lua_State *L, ${tp.iname} *value);
 #endif /* GLUA_ENABLE_STB */
 
 % endfor
@@ -113,7 +112,7 @@ static inline void GluaFreeDArray${tp.name}(lua_State *L, ${tp.name} *value);
 
 ## Define functions.
 % for tp in types:
-static inline int GluaRead${tp.name}(lua_State *L, int idx, ${tp.name} *value) {
+static inline int GluaRead${tp.name}(lua_State *L, int idx, ${tp.iname} *value) {
     int status = GLUA_OK;
     memset(value, 0, sizeof(*value));
     int stack_top = lua_gettop(L);
@@ -229,7 +228,7 @@ static inline int GluaRead${tp.name}(lua_State *L, int idx, ${tp.name} *value) {
     return status;
 }
 
-static inline void GluaFree${tp.name}(lua_State *L, ${tp.name} value) {
+static inline void GluaFree${tp.name}(lua_State *L, ${tp.iname} value) {
     % for field in reversed(tp.allfields):
         % if isinstance(field, FieldDef):
             GluaFree${field.type}(L, value.${field.name});
@@ -253,7 +252,7 @@ static inline void GluaFree${tp.name}(lua_State *L, ${tp.name} value) {
     % endfor
 }
 
-static inline int GluaPush${tp.name}(lua_State *L, ${tp.name} value) {
+static inline int GluaPush${tp.name}(lua_State *L, ${tp.iname} value) {
     int status = GLUA_OK;
     int stack_top = lua_gettop(L);
 
@@ -311,13 +310,13 @@ static inline int GluaPush${tp.name}(lua_State *L, ${tp.name} value) {
 }
 
 // clang-format off
-static inline GLUA_READ_ARRAY_FUNCTION(${tp.name}, ${tp.name})
-static inline GLUA_FREE_ARRAY_FUNCTION(${tp.name}, ${tp.name})
-static inline GLUA_PUSH_ARRAY_FUNCTION(${tp.name}, ${tp.name})
+static inline GLUA_READ_ARRAY_FUNCTION(${tp.name}, ${tp.iname})
+static inline GLUA_FREE_ARRAY_FUNCTION(${tp.name}, ${tp.iname})
+static inline GLUA_PUSH_ARRAY_FUNCTION(${tp.name}, ${tp.iname})
 #ifdef GLUA_ENABLE_STB
-static inline GLUA_READ_DARRAY_FUNCTION(${tp.name}, ${tp.name})
-static inline GLUA_FREE_DARRAY_FUNCTION(${tp.name}, ${tp.name})
-static inline GLUA_PUSH_DARRAY_FUNCTION(${tp.name}, ${tp.name})
+static inline GLUA_READ_DARRAY_FUNCTION(${tp.name}, ${tp.iname})
+static inline GLUA_FREE_DARRAY_FUNCTION(${tp.name}, ${tp.iname})
+static inline GLUA_PUSH_DARRAY_FUNCTION(${tp.name}, ${tp.iname})
 #endif /* GLUA_ENABLE_STB */
 CLANG_FORMAT_EOF;
 // clang-format on
