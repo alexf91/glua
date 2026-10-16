@@ -1,7 +1,13 @@
 # Custom
-build*
+build*/
 result
 tests-zig/gluatypes.zig
+
+# Zig
+.zig-cache/
+zig-out/
+zig-pkg/
+*.o
 
 # Python
 __pycache__
