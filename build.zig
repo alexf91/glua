@@ -21,11 +21,21 @@ pub fn build(b: *std.Build) !void {
         }},
     });
 
+    const test_filter = b.option(
+        []const u8,
+        "test-filter",
+        "Filter tests by substring",
+    );
+    const filters: []const []const u8 =
+        if (test_filter) |filter| &.{filter} else &.{};
+
     const tests = b.addTest(.{
         .root_module = test_mod,
+        .filters = filters,
     });
 
     const run_tests = b.addRunArtifact(tests);
+    run_tests.has_side_effects = true;
     const test_step = b.step("test", "Run tests");
     test_step.dependOn(&run_tests.step);
 }
