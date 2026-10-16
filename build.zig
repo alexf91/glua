@@ -11,16 +11,37 @@ pub fn build(b: *std.Build) !void {
         .optimize = optimize,
     });
 
+    // Generate and format gluatypes.zig.
+    const generate = b.addSystemCommand(&.{
+        "sh",
+        "-c",
+        "tools/glua-generate --language zig tests-zig/gluatypes.yaml | zig fmt --stdin > tests-zig/gluatypes.zig",
+    });
+    generate.has_side_effects = true;
+
+    const generated_file = generate.addOutputFileArg("tests-zig/gluatypes.zig");
+
+    // Expose the generated file as a module.
+    const glua_mod = b.createModule(.{
+        .root_source_file = generated_file,
+        .target = target,
+        .optimize = optimize,
+    });
+
     const test_mod = b.createModule(.{
         .root_source_file = b.path("tests-zig/test_glua.zig"),
         .target = target,
         .optimize = optimize,
-        .imports = &.{.{
+        .imports = &.{ .{
             .name = "zlua",
             .module = zlua_dep.module("zlua"),
-        }},
+        }, .{
+            .name = "gluatypes",
+            .module = glua_mod,
+        } },
     });
 
+    // Filter for tests by adding `-Dtest-filter=<testname>` to the build command.
     const test_filter = b.option(
         []const u8,
         "test-filter",

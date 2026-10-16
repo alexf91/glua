@@ -9,10 +9,10 @@ from glua.types import ArrayDef, FieldDef, UnionDef
 <%
 # Setup the mapping from Glua types to internal types.
 TYPEMAP = {
-    "Integer": "lua_Integer",
-    "Number": "lua_Number",
-    "String": "char *",
-    "LuaRef": "int",
+    "Integer": "c_longlong",
+    "Number": "f64",
+    "String": "*u8",
+    "LuaRef": "i32",
     "Boolean": "bool"
 }
 
@@ -31,6 +31,86 @@ for tp in types:
 % for header in headers:
 const ${header} = @import("${header}");
 % endfor
+
+const Lua = zlua.Lua;
+
+/// Error types used in generated code.
+pub const Error = error{
+    GeneralError,
+    NilError,
+    UnionError,
+    StackError,
+    RefError,
+    TypeError,
+};
+
+/// Check if a stack index is valid.
+pub fn checkStackIndex(L: *Lua, index: i32) !void {
+    const absIndex = L.absIndex(index);
+    if (absIndex < 1 or absIndex > L.getTop())
+        return Error.StackError;
+}
+
+/// Push a value to the stack.
+pub fn pushInteger(L: *Lua, value: zlua.Integer) !void {
+    L.pushInteger(value);
+}
+
+/// Read a value from the stack index `index`.
+pub fn readInteger(L: *Lua, index: i32) !zlua.Integer {
+    try checkStackIndex(L, index);
+    if (!L.isInteger(index))
+        return if (L.isNil(index)) Error.NilError else Error.TypeError;
+    return L.toInteger(index);
+}
+
+/// Free a value.
+pub fn freeInteger(L: *Lua, value: zlua.Integer) void {
+    _ = L;
+    _ = value;
+}
+
+/// Push a value to the stack.
+pub fn pushNumber(L: *Lua, value: zlua.Number) !void {
+    L.pushNumber(value);
+}
+
+/// Read a value from the stack index `index`.
+pub fn readNumber(L: *Lua, index: i32) !zlua.Number {
+    try checkStackIndex(L, index);
+    if (L.typeOf(index) != zlua.LuaType.number)
+        return if (L.isNil(index)) Error.NilError else Error.TypeError;
+    return L.toNumber(index);
+}
+
+/// Free a value.
+pub fn freeNumber(L: *Lua, value: zlua.Number) void {
+    _ = L;
+    _ = value;
+}
+
+/// Push a value to the stack.
+pub fn pushString(L: *Lua, value: []const u8) !void {
+    _ = L.pushString(value);
+}
+
+/// Read a value from the stack index `index`.
+pub fn readString(L: *Lua, index: i32) ![]const u8 {
+    try checkStackIndex(L, index);
+    if (L.typeOf(index) != zlua.LuaType.string)
+        return if (L.isNil(index)) Error.NilError else Error.TypeError;
+
+    // Operate on a copy of `index` to aovid modifying the stack.
+    L.pushValue(index);
+    const value = try L.toString(-1);
+    L.pop(1);
+    return L.allocator().dupe(u8, value);
+}
+
+/// Free a value.
+pub fn freeString(L: *Lua, value: []const u8) void {
+    L.allocator().free(value);
+}
 
 ## Create enums for union types.
 <%
