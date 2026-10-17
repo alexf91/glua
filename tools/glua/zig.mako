@@ -7,26 +7,26 @@ from glua.types import ArrayDef, FieldDef, UnionDef
 %>
 
 ## Generate a readArray function.
-<%def name="generateReadArray(zigtype, typename)">
+<%def name="generateReadArray(zigtype)">
 /// Read an array.
-pub fn read${typename}Array(L: *Lua, index: i32) ![]${zigtype} {
-    return readArray(${zigtype}, read${typename}, L, index);
+pub fn readArray(L: *Lua, index: i32) ![]${zigtype} {
+    return readArrayImpl(${zigtype}, read, L, index);
 }
 </%def>
 
 ## Generate a pushArray function.
-<%def name="generatePushArray(zigtype, typename)">
+<%def name="generatePushArray(zigtype)">
 /// Push an array.
-pub fn push${typename}Array(L: *Lua, values: []const ${zigtype}) !void {
-    return pushArray(${zigtype}, push${typename}, L, values);
+pub fn pushArray(L: *Lua, values: []const ${zigtype}) !void {
+    return pushArrayImpl(${zigtype}, push, L, values);
 }
 </%def>
 
 ## Generate a freeArray function.
-<%def name="generateFreeArray(zigtype, typename)">
+<%def name="generateFreeArray(zigtype)">
 /// Free an array.
-pub fn free${typename}Array(L: *Lua, values: []${zigtype}) void {
-    return freeArray(${zigtype}, free${typename}, L, values);
+pub fn freeArray(L: *Lua, values: []${zigtype}) void {
+    return freeArrayImpl(${zigtype}, free, L, values);
 }
 </%def>
 
@@ -66,7 +66,7 @@ pub fn checkStackIndex(L: *Lua, index: i32) !void {
 }
 
 /// Read an array.
-fn readArray(comptime T: type, comptime readValue: anytype, L: *Lua, index: i32) ![]T {
+fn readArrayImpl(comptime T: type, comptime readValue: anytype, L: *Lua, index: i32) ![]T {
     try checkStackIndex(L, index);
     if (L.typeOf(index) != zlua.LuaType.table)
         return Error.TypeError;
@@ -90,7 +90,7 @@ fn readArray(comptime T: type, comptime readValue: anytype, L: *Lua, index: i32)
 }
 
 /// Free an array.
-fn freeArray(comptime T: type, comptime freeValue: anytype, L: *Lua, values: []T) void {
+fn freeArrayImpl(comptime T: type, comptime freeValue: anytype, L: *Lua, values: []T) void {
     var i: usize = 0;
     for (values) |value| {
         freeValue(L, value);
@@ -100,7 +100,7 @@ fn freeArray(comptime T: type, comptime freeValue: anytype, L: *Lua, values: []T
 }
 
 /// Push an array.
-fn pushArray(comptime T: type, comptime pushValue: anytype, L: *Lua, values: []const T) !void {
+fn pushArrayImpl(comptime T: type, comptime pushValue: anytype, L: *Lua, values: []const T) !void {
     var i: usize = 0;
     L.newTable();
     while (i < values.len) {
@@ -121,78 +121,85 @@ pub const Error = error{
     TypeError,
 };
 
-/// Push a value to the stack.
-pub fn pushInteger(L: *Lua, value: zlua.Integer) !void {
-    L.pushInteger(value);
-}
+pub const Integer = struct {
+    /// Push a value to the stack.
+    pub fn push(L: *Lua, value: zlua.Integer) !void {
+        L.pushInteger(value);
+    }
 
-/// Read a value from the stack index `index`.
-pub fn readInteger(L: *Lua, index: i32) !zlua.Integer {
-    try checkStackIndex(L, index);
-    if (!L.isInteger(index))
-        return if (L.isNil(index)) Error.NilError else Error.TypeError;
-    return L.toInteger(index);
-}
+    /// Read a value from the stack index `index`.
+    pub fn read(L: *Lua, index: i32) !zlua.Integer {
+        try checkStackIndex(L, index);
+        if (!L.isInteger(index))
+            return if (L.isNil(index)) Error.NilError else Error.TypeError;
+        return L.toInteger(index);
+    }
 
-/// Free a value.
-pub fn freeInteger(L: *Lua, value: zlua.Integer) void {
-    _ = L;
-    _ = value;
-}
+    /// Free a value.
+    pub fn free(L: *Lua, value: zlua.Integer) void {
+        _ = L;
+        _ = value;
+    }
+    ${generateReadArray("zlua.Integer")}
+    ${generatePushArray("zlua.Integer")}
+    ${generateFreeArray("zlua.Integer")}
+};
 
-${generateReadArray("zlua.Integer", "Integer")}
-${generatePushArray("zlua.Integer", "Integer")}
-${generateFreeArray("zlua.Integer", "Integer")}
 
-/// Push a value to the stack.
-pub fn pushNumber(L: *Lua, value: zlua.Number) !void {
-    L.pushNumber(value);
-}
+pub const Number = struct {
+    /// Push a value to the stack.
+    pub fn push(L: *Lua, value: zlua.Number) !void {
+        L.pushNumber(value);
+    }
 
-/// Read a value from the stack index `index`.
-pub fn readNumber(L: *Lua, index: i32) !zlua.Number {
-    try checkStackIndex(L, index);
-    if (L.typeOf(index) != zlua.LuaType.number)
-        return if (L.isNil(index)) Error.NilError else Error.TypeError;
-    return L.toNumber(index);
-}
+    /// Read a value from the stack index `index`.
+    pub fn read(L: *Lua, index: i32) !zlua.Number {
+        try checkStackIndex(L, index);
+        if (L.typeOf(index) != zlua.LuaType.number)
+            return if (L.isNil(index)) Error.NilError else Error.TypeError;
+        return L.toNumber(index);
+    }
 
-/// Free a value.
-pub fn freeNumber(L: *Lua, value: zlua.Number) void {
-    _ = L;
-    _ = value;
-}
+    /// Free a value.
+    pub fn free(L: *Lua, value: zlua.Number) void {
+        _ = L;
+        _ = value;
+    }
 
-${generateReadArray("zlua.Number", "Number")}
-${generatePushArray("zlua.Number", "Number")}
-${generateFreeArray("zlua.Number", "Number")}
+    ${generateReadArray("zlua.Number")}
+    ${generatePushArray("zlua.Number")}
+    ${generateFreeArray("zlua.Number")}
+};
 
-/// Push a value to the stack.
-pub fn pushString(L: *Lua, value: []const u8) !void {
-    _ = L.pushString(value);
-}
 
-/// Read a value from the stack index `index`.
-pub fn readString(L: *Lua, index: i32) ![]const u8 {
-    try checkStackIndex(L, index);
-    if (L.typeOf(index) != zlua.LuaType.string)
-        return if (L.isNil(index)) Error.NilError else Error.TypeError;
+pub const String = struct {
+    /// Push a value to the stack.
+    pub fn push(L: *Lua, value: []const u8) !void {
+        _ = L.pushString(value);
+    }
 
-    // Operate on a copy of `index` to avoid modifying the stack.
-    L.pushValue(index);
-    const value = try L.toString(-1);
-    L.pop(1);
-    return L.allocator().dupe(u8, value);
-}
+    /// Read a value from the stack index `index`.
+    pub fn read(L: *Lua, index: i32) ![]const u8 {
+        try checkStackIndex(L, index);
+        if (L.typeOf(index) != zlua.LuaType.string)
+            return if (L.isNil(index)) Error.NilError else Error.TypeError;
 
-/// Free a value.
-pub fn freeString(L: *Lua, value: []const u8) void {
-    L.allocator().free(value);
-}
+        // Operate on a copy of `index` to avoid modifying the stack.
+        L.pushValue(index);
+        const value = try L.toString(-1);
+        L.pop(1);
+        return L.allocator().dupe(u8, value);
+    }
 
-${generateReadArray("[]const u8", "String")}
-${generatePushArray("[]const u8", "String")}
-${generateFreeArray("[]const u8", "String")}
+    /// Free a value.
+    pub fn free(L: *Lua, value: []const u8) void {
+        L.allocator().free(value);
+    }
+
+    ${generateReadArray("[]const u8")}
+    ${generatePushArray("[]const u8")}
+    ${generateFreeArray("[]const u8")}
+};
 
 ## Create enums for union types.
 <%
