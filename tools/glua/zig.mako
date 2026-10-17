@@ -6,6 +6,30 @@ import sys
 from glua.types import ArrayDef, FieldDef, UnionDef
 %>
 
+## Generate a readArray function.
+<%def name="generateReadArray(zigtype, typename)">
+/// Read an array.
+pub fn read${typename}Array(L: *Lua, index: i32) ![]${zigtype} {
+    return readArray(${zigtype}, read${typename}, L, index);
+}
+</%def>
+
+## Generate a pushArray function.
+<%def name="generatePushArray(zigtype, typename)">
+/// Push an array.
+pub fn push${typename}Array(L: *Lua, values: []const ${zigtype}) !void {
+    return pushArray(${zigtype}, push${typename}, L, values);
+}
+</%def>
+
+## Generate a freeArray function.
+<%def name="generateFreeArray(zigtype, typename)">
+/// Free an array.
+pub fn free${typename}Array(L: *Lua, values: []${zigtype}) void {
+    return freeArray(${zigtype}, free${typename}, L, values);
+}
+</%def>
+
 <%
 # Setup the mapping from Glua types to internal types.
 TYPEMAP = {
@@ -116,20 +140,9 @@ pub fn freeInteger(L: *Lua, value: zlua.Integer) void {
     _ = value;
 }
 
-/// Read an array.
-pub fn readIntegerArray(L: *Lua, index: i32) ![]zlua.Integer {
-    return readArray(zlua.Integer, readInteger, L, index);
-}
-
-/// Free an array.
-pub fn freeIntegerArray(L: *Lua, values: []zlua.Integer) void {
-    return freeArray(zlua.Integer, freeInteger, L, values);
-}
-
-/// Push an array.
-pub fn pushIntegerArray(L: *Lua, values: []const zlua.Integer) !void {
-    return pushArray(zlua.Integer, pushInteger, L, values);
-}
+${generateReadArray("zlua.Integer", "Integer")}
+${generatePushArray("zlua.Integer", "Integer")}
+${generateFreeArray("zlua.Integer", "Integer")}
 
 /// Push a value to the stack.
 pub fn pushNumber(L: *Lua, value: zlua.Number) !void {
@@ -150,20 +163,9 @@ pub fn freeNumber(L: *Lua, value: zlua.Number) void {
     _ = value;
 }
 
-/// Read an array.
-pub fn readNumberArray(L: *Lua, index: i32) ![]zlua.Number {
-    return readArray(zlua.Number, readNumber, L, index);
-}
-
-/// Free an array.
-pub fn freeNumberArray(L: *Lua, values: []zlua.Number) void {
-    return freeArray(zlua.Number, freeNumber, L, values);
-}
-
-/// Push an array.
-pub fn pushNumberArray(L: *Lua, values: []const zlua.Number) !void {
-    return pushArray(zlua.Number, pushNumber, L, values);
-}
+${generateReadArray("zlua.Number", "Number")}
+${generatePushArray("zlua.Number", "Number")}
+${generateFreeArray("zlua.Number", "Number")}
 
 /// Push a value to the stack.
 pub fn pushString(L: *Lua, value: []const u8) !void {
@@ -176,7 +178,7 @@ pub fn readString(L: *Lua, index: i32) ![]const u8 {
     if (L.typeOf(index) != zlua.LuaType.string)
         return if (L.isNil(index)) Error.NilError else Error.TypeError;
 
-    // Operate on a copy of `index` to aovid modifying the stack.
+    // Operate on a copy of `index` to avoid modifying the stack.
     L.pushValue(index);
     const value = try L.toString(-1);
     L.pop(1);
@@ -188,20 +190,9 @@ pub fn freeString(L: *Lua, value: []const u8) void {
     L.allocator().free(value);
 }
 
-/// Read an array.
-pub fn readStringArray(L: *Lua, index: i32) ![]zlua.String {
-    return readArray(zlua.String, readString, L, index);
-}
-
-/// Free an array.
-pub fn freeStringArray(L: *Lua, values: []zlua.String) void {
-    return freeArray(zlua.String, freeString, L, values);
-}
-
-/// Push an array.
-pub fn pushStringArray(L: *Lua, values: []const zlua.String) !void {
-    return pushArray(zlua.String, pushString, L, values);
-}
+${generateReadArray("[]const u8", "String")}
+${generatePushArray("[]const u8", "String")}
+${generateFreeArray("[]const u8", "String")}
 
 ## Create enums for union types.
 <%

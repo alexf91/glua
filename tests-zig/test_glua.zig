@@ -185,7 +185,7 @@ test "read_string_type_error" {
     try std.testing.expectError(Error.TypeError, value);
 }
 
-test "read_array_integer" {
+test "read_integer_array" {
     var ctx = try TestContext.setup();
     defer ctx.teardown();
 
@@ -196,7 +196,7 @@ test "read_array_integer" {
     try std.testing.expectEqualSlices(zlua.Integer, &[_]zlua.Integer{ 0, 1, 2, 3 }, values);
 }
 
-test "read_array_integer_type_error" {
+test "read_integer_array_type_error" {
     var ctx = try TestContext.setup();
     defer ctx.teardown();
 
@@ -205,7 +205,7 @@ test "read_array_integer_type_error" {
     try std.testing.expectError(Error.TypeError, values);
 }
 
-test "push_array_integer" {
+test "push_read_integer_array" {
     var ctx = try TestContext.setup();
     defer ctx.teardown();
 
@@ -213,4 +213,17 @@ test "push_array_integer" {
     const values = try glua.readIntegerArray(ctx.lua, -1);
     defer glua.freeIntegerArray(ctx.lua, values);
     try std.testing.expectEqualSlices(zlua.Integer, &[_]zlua.Integer{ 0, 1, 2, 3 }, values);
+}
+
+test "push_read_string_array" {
+    var ctx = try TestContext.setup();
+    defer ctx.teardown();
+
+    try glua.pushStringArray(ctx.lua, &[_][]const u8{ "ABC", "BCD", "CDE" });
+    const values = try glua.readStringArray(ctx.lua, -1);
+    defer glua.freeStringArray(ctx.lua, values);
+    try std.testing.expectEqual(3, values.len);
+    try std.testing.expectEqualStrings("ABC", values[0]);
+    try std.testing.expectEqualStrings("BCD", values[1]);
+    try std.testing.expectEqualStrings("CDE", values[2]);
 }
