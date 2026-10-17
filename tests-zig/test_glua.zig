@@ -184,3 +184,24 @@ test "read_string_type_error" {
     const value = glua.readString(ctx.lua, -1);
     try std.testing.expectError(Error.TypeError, value);
 }
+
+test "read_array_integer" {
+    var ctx = try TestContext.setup();
+    defer ctx.teardown();
+
+    _ = try ctx.lua.doString("return {0, 1, 2, 3}");
+    const values = try glua.readIntegerArray(ctx.lua, -1);
+    try std.testing.expectEqual(4, values.len);
+    try std.testing.expectEqualSlices(zlua.Integer, &[_]zlua.Integer{ 0, 1, 2, 3 }, values);
+
+    glua.freeIntegerArray(ctx.lua, values);
+}
+
+test "read_array_integer_type_error" {
+    var ctx = try TestContext.setup();
+    defer ctx.teardown();
+
+    _ = try ctx.lua.doString("return {0, 1, 2, '3'}");
+    const values = glua.readIntegerArray(ctx.lua, -1);
+    try std.testing.expectError(Error.TypeError, values);
+}

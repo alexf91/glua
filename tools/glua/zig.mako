@@ -34,6 +34,47 @@ const ${header} = @import("${header}");
 
 const Lua = zlua.Lua;
 
+/// Check if a stack index is valid.
+pub fn checkStackIndex(L: *Lua, index: i32) !void {
+    const absIndex = L.absIndex(index);
+    if (absIndex < 1 or absIndex > L.getTop())
+        return Error.StackError;
+}
+
+/// Read an array.
+fn readArray(comptime T: type, comptime readValue: anytype, L: *Lua, index: i32) ![]T {
+    try checkStackIndex(L, index);
+    if (L.typeOf(index) != zlua.LuaType.table)
+        return Error.TypeError;
+
+    L.len(index);
+    const length = try L.toInteger(-1);
+    L.pop(1);
+    std.debug.assert(length >= 0);
+
+    const values = try L.allocator().alloc(T, @intCast(length));
+    errdefer L.allocator().free(values);
+
+    var i: usize = 0;
+    while (i < length) {
+        _ = L.getIndex(index, @intCast(i + 1));
+        values[i] = try readValue(L, -1);
+        L.pop(1);
+        i += 1;
+    }
+    return values;
+}
+
+/// Free an array.
+fn freeArray(comptime T: type, comptime freeValue: anytype, L: *Lua, values: []T) void {
+    var i: usize = 0;
+    for (values) |value| {
+        freeValue(L, value);
+        i += 1;
+    }
+    L.allocator().free(values);
+}
+
 /// Error types used in generated code.
 pub const Error = error{
     GeneralError,
@@ -43,13 +84,6 @@ pub const Error = error{
     RefError,
     TypeError,
 };
-
-/// Check if a stack index is valid.
-pub fn checkStackIndex(L: *Lua, index: i32) !void {
-    const absIndex = L.absIndex(index);
-    if (absIndex < 1 or absIndex > L.getTop())
-        return Error.StackError;
-}
 
 /// Push a value to the stack.
 pub fn pushInteger(L: *Lua, value: zlua.Integer) !void {
@@ -70,6 +104,16 @@ pub fn freeInteger(L: *Lua, value: zlua.Integer) void {
     _ = value;
 }
 
+/// Read an array.
+pub fn readIntegerArray(L: *Lua, index: i32) ![]zlua.Integer {
+    return readArray(zlua.Integer, readInteger, L, index);
+}
+
+/// Free an array.
+pub fn freeIntegerArray(L: *Lua, values: []zlua.Integer) void {
+    return freeArray(zlua.Integer, freeInteger, L, values);
+}
+
 /// Push a value to the stack.
 pub fn pushNumber(L: *Lua, value: zlua.Number) !void {
     L.pushNumber(value);
@@ -87,6 +131,16 @@ pub fn readNumber(L: *Lua, index: i32) !zlua.Number {
 pub fn freeNumber(L: *Lua, value: zlua.Number) void {
     _ = L;
     _ = value;
+}
+
+/// Read an array.
+pub fn readNumberArray(L: *Lua, index: i32) ![]zlua.Number {
+    return readArray(zlua.Number, readNumber, L, index);
+}
+
+/// Free an array.
+pub fn freeNumberArray(L: *Lua, values: []zlua.Number) void {
+    return freeArray(zlua.Number, freeNumber, L, values);
 }
 
 /// Push a value to the stack.
@@ -110,6 +164,16 @@ pub fn readString(L: *Lua, index: i32) ![]const u8 {
 /// Free a value.
 pub fn freeString(L: *Lua, value: []const u8) void {
     L.allocator().free(value);
+}
+
+/// Read an array.
+pub fn readStringArray(L: *Lua, index: i32) ![]zlua.String {
+    return readArray(zlua.String, readString, L, index);
+}
+
+/// Free an array.
+pub fn freeStringArray(L: *Lua, values: []zlua.String) void {
+    return freeArray(zlua.String, freeString, L, values);
 }
 
 ## Create enums for union types.
