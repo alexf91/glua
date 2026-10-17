@@ -162,9 +162,9 @@ test "read_string" {
     _ = ctx.lua.pushString("Hello World!");
     const top = ctx.lua.getTop();
     const value = try glua.readString(ctx.lua, -1);
+    defer glua.freeString(ctx.lua, value);
     try std.testing.expectEqual(top, ctx.lua.getTop());
     try std.testing.expectEqualStrings("Hello World!", value);
-    glua.freeString(ctx.lua, value);
 }
 
 test "read_string_nil_error" {
@@ -191,10 +191,9 @@ test "read_array_integer" {
 
     _ = try ctx.lua.doString("return {0, 1, 2, 3}");
     const values = try glua.readIntegerArray(ctx.lua, -1);
+    defer glua.freeIntegerArray(ctx.lua, values);
     try std.testing.expectEqual(4, values.len);
     try std.testing.expectEqualSlices(zlua.Integer, &[_]zlua.Integer{ 0, 1, 2, 3 }, values);
-
-    glua.freeIntegerArray(ctx.lua, values);
 }
 
 test "read_array_integer_type_error" {
@@ -204,4 +203,14 @@ test "read_array_integer_type_error" {
     _ = try ctx.lua.doString("return {0, 1, 2, '3'}");
     const values = glua.readIntegerArray(ctx.lua, -1);
     try std.testing.expectError(Error.TypeError, values);
+}
+
+test "push_array_integer" {
+    var ctx = try TestContext.setup();
+    defer ctx.teardown();
+
+    try glua.pushIntegerArray(ctx.lua, &[_]zlua.Integer{ 0, 1, 2, 3 });
+    const values = try glua.readIntegerArray(ctx.lua, -1);
+    defer glua.freeIntegerArray(ctx.lua, values);
+    try std.testing.expectEqualSlices(zlua.Integer, &[_]zlua.Integer{ 0, 1, 2, 3 }, values);
 }

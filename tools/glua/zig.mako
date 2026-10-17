@@ -75,6 +75,18 @@ fn freeArray(comptime T: type, comptime freeValue: anytype, L: *Lua, values: []T
     L.allocator().free(values);
 }
 
+/// Push an array.
+fn pushArray(comptime T: type, comptime pushValue: anytype, L: *Lua, values: []const T) !void {
+    var i: usize = 0;
+    L.newTable();
+    while (i < values.len) {
+        try pushValue(L, values[i]);
+        errdefer L.pop(1);
+        L.setIndex(-2, @intCast(i + 1));
+        i += 1;
+    }
+}
+
 /// Error types used in generated code.
 pub const Error = error{
     GeneralError,
@@ -114,6 +126,11 @@ pub fn freeIntegerArray(L: *Lua, values: []zlua.Integer) void {
     return freeArray(zlua.Integer, freeInteger, L, values);
 }
 
+/// Push an array.
+pub fn pushIntegerArray(L: *Lua, values: []const zlua.Integer) !void {
+    return pushArray(zlua.Integer, pushInteger, L, values);
+}
+
 /// Push a value to the stack.
 pub fn pushNumber(L: *Lua, value: zlua.Number) !void {
     L.pushNumber(value);
@@ -141,6 +158,11 @@ pub fn readNumberArray(L: *Lua, index: i32) ![]zlua.Number {
 /// Free an array.
 pub fn freeNumberArray(L: *Lua, values: []zlua.Number) void {
     return freeArray(zlua.Number, freeNumber, L, values);
+}
+
+/// Push an array.
+pub fn pushNumberArray(L: *Lua, values: []const zlua.Number) !void {
+    return pushArray(zlua.Number, pushNumber, L, values);
 }
 
 /// Push a value to the stack.
@@ -174,6 +196,11 @@ pub fn readStringArray(L: *Lua, index: i32) ![]zlua.String {
 /// Free an array.
 pub fn freeStringArray(L: *Lua, values: []zlua.String) void {
     return freeArray(zlua.String, freeString, L, values);
+}
+
+/// Push an array.
+pub fn pushStringArray(L: *Lua, values: []const zlua.String) !void {
+    return pushArray(zlua.String, pushString, L, values);
 }
 
 ## Create enums for union types.
