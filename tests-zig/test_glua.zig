@@ -2,7 +2,8 @@
 
 const std = @import("std");
 const zlua = @import("zlua");
-const glua = @import("gluatypes.zig");
+const glua = @import("generated/glua.zig");
+const gt = @import("gluatypes.zig");
 
 const Lua = zlua.Lua;
 const Error = glua.Error;
@@ -236,4 +237,16 @@ test "push_read_string_array" {
     try std.testing.expectEqualStrings("ABC", values[0]);
     try std.testing.expectEqualStrings("BCD", values[1]);
     try std.testing.expectEqualStrings("CDE", values[2]);
+}
+
+test "read_BaseType" {
+    var ctx = try TestContext.setup();
+    defer ctx.teardown();
+
+    _ = try ctx.lua.doString("return {valueInteger = 42, valueNumber = 42.42, valueString = 'ABC'}");
+    const value = try glua.BaseType.read(ctx.lua, -1);
+    defer glua.BaseType.free(ctx.lua, value);
+    try std.testing.expectEqual(42, value.valueInteger);
+    try std.testing.expectEqual(42.42, value.valueNumber);
+    try std.testing.expectEqualStrings("ABC", value.valueString);
 }

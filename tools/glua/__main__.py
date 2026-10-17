@@ -21,12 +21,10 @@ DEFAULT_HEADERS = {
             "lauxlib.h",
         ]
     ),
-    "zig": set(
-        [
-            "zlua",
-            "std",
-        ]
-    ),
+    "zig": {
+        "zlua": "zlua",
+        "std": "std",
+    },
 }
 
 

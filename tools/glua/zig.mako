@@ -3,14 +3,41 @@
 
 <%!
 import sys
-from glua.types import ArrayDef, FieldDef, UnionDef
+from glua.types import ArrayDef, FieldDef, TypeDef, UnionDef
 %>
 
-## Generate a readArray function.
-<%def name="generateReadArray(zigtype)">
-/// Read an array.
-pub fn readArray(L: *Lua, index: i32) ![]${zigtype} {
-    return readArrayImpl(${zigtype}, read, L, index);
+## Generate a push function for compound types.
+<%def name="generatePush(tp: TypeDef)">
+/// Push a value.
+pub fn push(L: *Lua, value: ${tp.iname}) !void {
+    // TODO: implement
+    _ = L;
+    _ = value;
+    return Error.GeneralError;
+}
+</%def>
+
+## Generate a read function for compound types.
+<%def name="generateRead(tp: TypeDef)">
+/// Read a value.
+pub fn read(L: *Lua, index: i32) !${tp.iname} {
+    try checkStackIndex(L, index);
+    const absIndex = L.absIndex(index);
+    if (!L.isTable(absIndex))
+        return Error.TypeError;
+    % for field in tp.allfields:
+    % endfor
+    return Error.GeneralError;
+}
+</%def>
+
+## Generate a free function for compound types.
+<%def name="generateFree(tp: TypeDef)">
+/// Free a value.
+pub fn free(L: *Lua, value: ${tp.iname}) void {
+    // TODO: implement
+    _ = L;
+    _ = value;
 }
 </%def>
 
@@ -19,6 +46,15 @@ pub fn readArray(L: *Lua, index: i32) ![]${zigtype} {
 /// Push an array.
 pub fn pushArray(L: *Lua, values: []const ${zigtype}) !void {
     return pushArrayImpl(${zigtype}, push, L, values);
+}
+</%def>
+
+## Generate a readArray function.
+<%def name="generateReadArray(zigtype)">
+/// Read an array.
+pub fn readArray(L: *Lua, index: i32) ![]${zigtype} {
+    try checkStackIndex(L, index);
+    return readArrayImpl(${zigtype}, read, L, index);
 }
 </%def>
 
@@ -33,8 +69,8 @@ pub fn freeArray(L: *Lua, values: []${zigtype}) void {
 <%
 # Setup the mapping from Glua types to internal types.
 TYPEMAP = {
-    "Integer": "c_longlong",
-    "Number": "f64",
+    "Integer": "zlua.Integer",
+    "Number": "zlua.Number",
     "String": "*u8",
     "LuaRef": "i32",
     "Boolean": "bool"
@@ -49,11 +85,12 @@ headers = default_headers.copy()
 for tp in types:
     headers.update(tp.headers)
     TYPEMAP[tp.name] = tp.iname
+import sys
 %>
 
 ## Include necessary headers.
-% for header in headers:
-const ${header} = @import("${header}");
+% for var, module in headers.items():
+const ${var} = @import("${module}");
 % endfor
 
 const Lua = zlua.Lua;
@@ -145,7 +182,6 @@ pub const Integer = struct {
     ${generateFreeArray("zlua.Integer")}
 };
 
-
 pub const Number = struct {
     /// Push a value to the stack.
     pub fn push(L: *Lua, value: zlua.Number) !void {
@@ -170,7 +206,6 @@ pub const Number = struct {
     ${generatePushArray("zlua.Number")}
     ${generateFreeArray("zlua.Number")}
 };
-
 
 pub const String = struct {
     /// Push a value to the stack.
@@ -201,223 +236,14 @@ pub const String = struct {
     ${generateFreeArray("[]const u8")}
 };
 
-## Create enums for union types.
-<%
-for tp in types:
-    for union in tp.unions:
-        if union.enum:
-            raise NotImplementedError("enum generation not implemented")
-%>
-
-## Define functions.
-##% for tp in types:
-##static inline int GluaRead${tp.name}(lua_State *L, int idx, ${tp.iname} *value) {
-##    int status = GLUA_OK;
-##    memset(value, 0, sizeof(*value));
-##    int stack_top = lua_gettop(L);
-##    _unused(stack_top);
-##    int absidx = lua_absindex(L, idx);
-##
-##    if (!lua_istable(L, absidx))
-##        return GLUA_TYPE_ERROR;
-##
-##    % for field in tp.allfields:
-##        // Read field '${field.name}'.
-##        assert (status == GLUA_OK);
-##        lua_getfield(L, absidx, "${field.name}");
-##        if (lua_isnil(L, -1)) {
-##            % if field.optional:
-##                // Success: field is optional.
-##                lua_pop(L, 1);
-##                ## For unions, we indicate this by setting the index to -1.
-##                % if isinstance(field, UnionDef):
-##                    value->${field.index} = -1;
-##                ## For references, we set the value to LUA_NOREF instead of the default 0.
-##                ## TODO: This should probably be fixed better than checking for the type name.
-##                % elif isinstance(field, FieldDef) and field.type == "LuaRef":
-##                    value->${field.name} = LUA_NOREF;
-##                % endif
-##            % else:
-##                // Error: field is not optional.
-##                lua_pop(L, 1);
-##                status = GLUA_NIL_ERROR;
-##                goto error_${field.name};
-##            % endif
-##        } else {
-##            % if isinstance(field, FieldDef):
-##                // Read scalar value.
-##                ${temptype(field.type)} tmp;
-##                status = GluaRead${field.type}(L, -1, &tmp);
-##                value->${field.name} = tmp;
-##            % elif isinstance(field, ArrayDef):
-##                // Read array value.
-##                static_assert(sizeof(${temptype(field.type)}) == sizeof(value->${field.name}[0]), "size mismatch");
-##                % if not field.dynamic:
-##                    status = GluaReadArray${field.type}(L, -1, &value->${field.name}, &value->${field.length});
-##                % else:
-##                    status = GluaReadDArray${field.type}(L, -1, &value->${field.name});
-##                % endif
-##            % elif isinstance(field, UnionDef):
-##                // Read union value.
-##                // First read the index variable.
-##                lua_getfield(L, absidx, "${field.index}");
-##                lua_Integer index;
-##                status = GluaReadInteger(L, -1, &index);
-##                lua_pop(L, 1);
-##                if (status != GLUA_OK || index < 0 || index >= ${len(field.types)}) {
-##                    lua_pop(L, 1);
-##                    ## No read happened -> no type-specific cleanup
-##                    value->${field.index} = -1;
-##                    status = GLUA_INDEX_ERROR;
-##                    goto error_${field.name};
-##                }
-##                value->${field.index} = index;
-##                // Read the scalar value.
-##                switch (index) {
-##                    % for i, (ftype, fname) in enumerate(zip(field.types, field.fields)):
-##                        case ${i}: {
-##                            ${temptype(ftype)} tmp;
-##                            status = GluaRead${ftype}(L, -1, &tmp);
-##                            value->${fname} = tmp;
-##                            break;
-##                        }
-##                    % endfor
-##                    default:
-##                        assert(false);
-##                }
-##            % endif
-##                lua_pop(L, 1);
-##                if (status != GLUA_OK)
-##                    goto error_${field.name};
-##        }
-##    % endfor
-##
-##    assert(status == GLUA_OK);
-##    assert(lua_gettop(L) == stack_top);
-##    return status;
-##
-##    ## Cleanup: This generates some unreachable code for the last field.
-##    ##          It is already cleaned up during the failed read.
-##    % for field in reversed(tp.allfields):
-##        % if isinstance(field, FieldDef):
-##            GluaFree${field.type}(L, value->${field.name});
-##        % elif isinstance(field, ArrayDef):
-##            % if not field.dynamic:
-##                GluaFreeArray${field.type}(L, value->${field.name}, value->${field.length});
-##            % else:
-##                GluaFreeDArray${field.type}(L, value->${field.name});
-##            % endif
-##        % elif isinstance(field, UnionDef):
-##            switch (value->${field.index}) {
-##            % for i, (ftype, fname) in enumerate(zip(field.types, field.fields)):
-##                case ${i}:
-##                    GluaFree${ftype}(L, value->${fname});
-##                    break;
-##            % endfor
-##                default:
-##                    assert(value->${field.index} == -1);
-##            }
-##        % endif
-##        error_${field.name}:
-##    % endfor
-##
-##    assert(status != GLUA_OK);
-##    memset(value, 0, sizeof(*value));
-##    assert(lua_gettop(L) == stack_top);
-##    return status;
-##}
-##
-##static inline void GluaFree${tp.name}(lua_State *L, ${tp.iname} value) {
-##    % for field in reversed(tp.allfields):
-##        % if isinstance(field, FieldDef):
-##            GluaFree${field.type}(L, value.${field.name});
-##        % elif isinstance(field, ArrayDef):
-##            % if not field.dynamic:
-##                GluaFreeArray${field.type}(L, value.${field.name}, value.${field.length});
-##            % else:
-##                GluaFreeDArray${field.type}(L, value.${field.name});
-##            % endif
-##        % elif isinstance(field, UnionDef):
-##            switch (value.${field.index}) {
-##            % for i, (ftype, fname) in enumerate(zip(field.types, field.fields)):
-##                case ${i}:
-##                    GluaFree${ftype}(L, value.${fname});
-##                    break;
-##            % endfor
-##                default:
-##                    assert(value.${field.index} == -1);
-##            }
-##        % endif
-##    % endfor
-##}
-##
-##static inline int GluaPush${tp.name}(lua_State *L, ${tp.iname} value) {
-##    int status = GLUA_OK;
-##    int stack_top = lua_gettop(L);
-##
-##    lua_newtable(L);
-##    % for field in tp.allfields:
-##        % if isinstance(field, FieldDef):
-##            status = GluaPush${field.type}(L, value.${field.name});
-##            if (status != GLUA_OK) {
-##                lua_settop(L, stack_top);
-##                return status;
-##            }
-##            assert(lua_gettop(L) == stack_top + 2);
-##            lua_setfield(L, -2, "${field.name}");
-##        % elif isinstance(field, ArrayDef):
-##            % if not field.dynamic:
-##                status = GluaPushArray${field.type}(L, value.${field.name}, value.${field.length});
-##            % else:
-##                status = GluaPushDArray${field.type}(L, value.${field.name});
-##            % endif
-##            if (status != GLUA_OK) {
-##                lua_settop(L, stack_top);
-##                return status;
-##            }
-##            assert(lua_gettop(L) == stack_top + 2);
-##            lua_setfield(L, -2, "${field.name}");
-##        % elif isinstance(field, UnionDef):
-##            ## For optional fields, we allow -1 to indicate that the field is missing.
-##            <% indexMin = -1 if field.optional else 0 %>
-##            if (value.${field.index} < ${indexMin} || value.${field.index} >= ${len(field.types)}) {
-##                lua_settop(L, stack_top);
-##                return GLUA_INDEX_ERROR;
-##            } else if (value.${field.index} >= 0) {
-##                assert(GluaPushInteger(L, value.${field.index}) == GLUA_OK);
-##                lua_setfield(L, -2, "${field.index}");
-##            }
-##
-##            switch (value.${field.index}) {
-##            % for i, (ftype, fname) in enumerate(zip(field.types, field.fields)):
-##                case ${i}:
-##                    status = GluaPush${ftype}(L, value.${fname});
-##                    if (status != GLUA_OK) {
-##                        lua_settop(L, stack_top);
-##                        return status;
-##                    }
-##                    lua_setfield(L, -2, "${field.name}");
-##                    break;
-##            % endfor
-##            }
-##        % endif
-##    % endfor
-##
-##    assert(lua_gettop(L) == stack_top + 1);
-##    assert(status == GLUA_OK);
-##    return status;
-##}
-##
-##// clang-format off
-##static inline GLUA_READ_ARRAY_FUNCTION(${tp.name}, ${tp.iname})
-##static inline GLUA_FREE_ARRAY_FUNCTION(${tp.name}, ${tp.iname})
-##static inline GLUA_PUSH_ARRAY_FUNCTION(${tp.name}, ${tp.iname})
-###ifdef GLUA_ENABLE_STB
-##static inline GLUA_READ_DARRAY_FUNCTION(${tp.name}, ${tp.iname})
-##static inline GLUA_FREE_DARRAY_FUNCTION(${tp.name}, ${tp.iname})
-##static inline GLUA_PUSH_DARRAY_FUNCTION(${tp.name}, ${tp.iname})
-###endif /* GLUA_ENABLE_STB */
-##CLANG_FORMAT_EOF;
-##// clang-format on
-##
-##% endfor
+## Generate functions for compound types.
+% for tp in types:
+pub const ${tp.name} = struct {
+    ${generatePush(tp)}
+    ${generateRead(tp)}
+    ${generateFree(tp)}
+    ${generateReadArray(tp.iname)}
+    ${generatePushArray(tp.iname)}
+    ${generateFreeArray(tp.iname)}
+};
+% endfor

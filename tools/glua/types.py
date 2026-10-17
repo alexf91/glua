@@ -155,7 +155,8 @@ class TypeDef(BaseDef):
     """Name of the type as used for function generation."""
     iname: str
     """Internal type name, e.g. `rl.Vector3` in Zig."""
-    headers: list[str]
+    headers: list[str] | dict[str, str]
+    """List of headers to include for C and mapping for Zig."""
     fields: list[FieldDef]
     arrays: list[ArrayDef]
     unions: list[UnionDef]

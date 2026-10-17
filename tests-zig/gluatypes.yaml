@@ -1,6 +1,9 @@
 ---
 # Struct with base types.
 name: BaseType
+iname: gt.BaseType
+headers:
+    gt: ../gluatypes.zig
 fields:
     - name: valueInteger
       type: Integer

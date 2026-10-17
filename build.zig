@@ -15,11 +15,12 @@ pub fn build(b: *std.Build) !void {
     const generate = b.addSystemCommand(&.{
         "sh",
         "-c",
-        "tools/glua-generate --language zig tests-zig/gluatypes.yaml | zig fmt --stdin > tests-zig/gluatypes.zig",
+        "mkdir -p tests-zig/generated && tools/glua-generate --language zig tests-zig/gluatypes.yaml | zig fmt --stdin > tests-zig/generated/glua.zig",
+        //"mkdir -p tests-zig/generated && tools/glua-generate --language zig tests-zig/gluatypes.yaml > tests-zig/generated/glua.zig",
     });
     generate.has_side_effects = true;
 
-    const generated_file = generate.addOutputFileArg("tests-zig/gluatypes.zig");
+    const generated_file = generate.addOutputFileArg("tests-zig/generated/glua.zig");
 
     // Expose the generated file as a module.
     const glua_mod = b.createModule(.{
@@ -36,7 +37,7 @@ pub fn build(b: *std.Build) !void {
             .name = "zlua",
             .module = zlua_dep.module("zlua"),
         }, .{
-            .name = "gluatypes",
+            .name = "glua",
             .module = glua_mod,
         } },
     });

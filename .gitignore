@@ -1,7 +1,7 @@
 # Custom
 build*/
 result
-tests-zig/gluatypes.zig
+tests-zig/generated
 
 # Zig
 .zig-cache/
