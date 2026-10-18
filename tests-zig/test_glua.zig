@@ -306,6 +306,21 @@ test "read_BaseType_type_error" {
     try std.testing.expectError(glua.Error.TypeError, value);
 }
 
+test "read_BaseType_nil_error" {
+    var ctx = try TestContext.setup();
+    defer ctx.teardown();
+
+    _ = try ctx.lua.doString(
+        \\return {
+        \\  valueNumber = 42.42,
+        \\  valueString = 'ABC'
+        \\}
+    );
+    defer checkStackLevel(ctx.lua, ctx.lua.getTop());
+    const value = glua.BaseType.read(ctx.lua, -1);
+    try std.testing.expectError(glua.Error.NilError, value);
+}
+
 test "clone_BaseType" {
     var ctx = try TestContext.setup();
     defer ctx.teardown();
@@ -382,4 +397,46 @@ test "clone_ArrayType" {
     try std.testing.expectEqualStrings("A", copy.valueString[0]);
     try std.testing.expectEqualStrings("B", copy.valueString[1]);
     try std.testing.expectEqualStrings("C", copy.valueString[2]);
+}
+
+test "read_OptionalDefaultType" {
+    var ctx = try TestContext.setup();
+    defer ctx.teardown();
+
+    _ = try ctx.lua.doString("return {}");
+    defer checkStackLevel(ctx.lua, ctx.lua.getTop());
+
+    const value = try glua.OptionalDefaultType.read(ctx.lua, -1);
+    defer glua.OptionalDefaultType.free(ctx.lua, value);
+    try std.testing.expectEqual(42, value.valueInteger);
+    try std.testing.expectEqual(42.42, value.valueNumber);
+    try std.testing.expectEqualStrings("ABC", value.valueString orelse "null");
+}
+
+test "read_OptionalType" {
+    var ctx = try TestContext.setup();
+    defer ctx.teardown();
+
+    _ = try ctx.lua.doString("return {}");
+    defer checkStackLevel(ctx.lua, ctx.lua.getTop());
+
+    const value = try glua.OptionalType.read(ctx.lua, -1);
+    defer glua.OptionalType.free(ctx.lua, value);
+    try std.testing.expectEqual(null, value.valueInteger);
+    try std.testing.expectEqual(null, value.valueNumber);
+    try std.testing.expectEqual(null, value.valueString);
+}
+
+test "read_DefaultType" {
+    var ctx = try TestContext.setup();
+    defer ctx.teardown();
+
+    _ = try ctx.lua.doString("return {}");
+    defer checkStackLevel(ctx.lua, ctx.lua.getTop());
+
+    const value = try glua.DefaultType.read(ctx.lua, -1);
+    defer glua.DefaultType.free(ctx.lua, value);
+    try std.testing.expectEqual(42, value.valueInteger);
+    try std.testing.expectEqual(42.42, value.valueNumber);
+    try std.testing.expectEqualStrings("ABC", value.valueString);
 }

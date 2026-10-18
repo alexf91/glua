@@ -12,6 +12,54 @@ fields:
     - name: valueNumber
       type: Number
 ---
+# Struct with optional base types with defaults.
+name: OptionalDefaultType
+iname: gt.OptionalDefaultType
+headers:
+    gt: ../gluatypes.zig
+fields:
+    - name: valueString
+      type: String
+      optional: true
+    - name: valueInteger
+      type: Integer
+      optional: true
+    - name: valueNumber
+      type: Number
+      optional: true
+---
+# Struct with optional base types without defaults.
+name: OptionalType
+iname: gt.OptionalType
+headers:
+    gt: ../gluatypes.zig
+fields:
+    - name: valueString
+      type: String
+      optional: true
+    - name: valueInteger
+      type: Integer
+      optional: true
+    - name: valueNumber
+      type: Number
+      optional: true
+---
+# Struct with base types with defaults.
+name: DefaultType
+iname: gt.DefaultType
+headers:
+    gt: ../gluatypes.zig
+fields:
+    - name: valueString
+      type: String
+      optional: true
+    - name: valueInteger
+      type: Integer
+      optional: true
+    - name: valueNumber
+      type: Number
+      optional: true
+---
 # Struct with array types.
 name: ArrayType
 iname: gt.ArrayType

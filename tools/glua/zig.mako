@@ -35,10 +35,24 @@ pub fn read(L: *Lua, index: i32) !${tp.iname} {
     } = .{};
     errdefer {
         % for field in tp.fields:
-            if (initialized.${field.name}) ${field.type}.free(L, value.${field.name});
+            if (initialized.${field.name}) {
+                if (comptime @typeInfo(@TypeOf(value.${field.name})) == .optional) {
+                    if (value.${field.name}) |actual|
+                        ${field.type}.free(L, actual);
+                } else {
+                    ${field.type}.free(L, value.${field.name});
+                }
+            }
         % endfor
         % for field in tp.arrays:
-            if (initialized.${field.name}) ${field.type}.freeArray(L, value.${field.name});
+            if (initialized.${field.name}) {
+                if (comptime @typeInfo(@TypeOf(value.${field.name})) == .optional) {
+                    if (value.${field.name}) |actual|
+                        ${field.type}.freeArray(L, actual);
+                } else {
+                    ${field.type}.freeArray(L, value.${field.name});
+                }
+            }
         % endfor
         % for field in tp.unions:
             <% raise NotImplementedError("support for unions not implemented") %>
@@ -51,7 +65,30 @@ pub fn read(L: *Lua, index: i32) !${tp.iname} {
         defer L.pop(1);
         if (L.isNil(-1)) {
             % if field.optional:
-                <% raise NotImplementedError("optional fields not implemented") %>
+                % if isinstance(field, FieldDef):
+                    const defaultValue = defaultFieldValue(${tp.iname}, "${field.name}");
+                    if (comptime @typeInfo(@TypeOf(defaultValue)) == .optional) {
+                        value.${field.name} = null;
+                        if (defaultValue) |actual|
+                            value.${field.name} = try ${field.type}.clone(L, actual);
+                    } else {
+                        value.${field.name} = try ${field.type}.clone(L, defaultValue);
+                    }
+                % elif isinstance(field, ArrayDef):
+                    const defaultValue = defaultFieldValue(${tp.iname}, "${field.name}");
+                    if (comptime @typeInfo(@TypeOf(defaultValue)) == .optional) {
+                        value.${field.name} = null;
+                        if (defaultValue) |actual|
+                            value.${field.name} = try ${field.type}.cloneArray(L, actual);
+                    } else {
+                        value.${field.name} = try ${field.type}.cloneArray(L, defaultValue);
+                    }
+                % elif isinstance(field, UnionDef):
+                    <% raise NotImplementedError("optional fields not implemented") %>
+                % endif
+                initialized.${field.name} = true;
+            % else:
+                return Error.NilError;
             % endif
         } else {
             % if isinstance(field, FieldDef):
@@ -81,9 +118,19 @@ pub fn read(L: *Lua, index: i32) !${tp.iname} {
 pub fn free(L: *Lua, value: ${tp.iname}) void {
     % for field in tp.allfields:
         % if isinstance(field, FieldDef):
-            ${field.type}.free(L, value.${field.name});
+            if (comptime @typeInfo(@TypeOf(value.${field.name})) == .optional) {
+                if (value.${field.name}) |actual|
+                    ${field.type}.free(L, actual);
+            } else {
+                ${field.type}.free(L, value.${field.name});
+            }
         % elif isinstance(field, ArrayDef):
-            ${field.type}.freeArray(L, value.${field.name});
+            if (comptime @typeInfo(@TypeOf(value.${field.name})) == .optional) {
+                if (value.${field.name}) |actual|
+                    ${field.type}.freeArray(L, actual);
+            } else {
+                ${field.type}.freeArray(L, value.${field.name});
+            }
         % elif isinstance(field, UnionDef):
         % endif
     % endfor
@@ -172,6 +219,17 @@ const ${var} = @import("${module}");
 % endfor
 
 const Lua = zlua.Lua;
+
+/// Use compile-time reflection to get the default value of a field.
+fn defaultFieldValue(comptime T: type, comptime fieldName: []const u8) @FieldType(T, fieldName) {
+    const info = @typeInfo(T).@"struct";
+    inline for (info.field_names, 0..) |name, i| {
+        if (comptime std.mem.eql(u8, name, fieldName)) {
+            return info.field_attrs[i].defaultValue(info.field_types[i]) orelse return null;
+        }
+    }
+    @compileError("Field not found");
+}
 
 /// Check if a stack index is valid.
 pub fn checkStackIndex(L: *Lua, index: i32) !void {
