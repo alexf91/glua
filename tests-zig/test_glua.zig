@@ -204,6 +204,15 @@ test "read_string_type_error" {
     try std.testing.expectError(Error.TypeError, value);
 }
 
+test "clone_string" {
+    var ctx = try TestContext.setup();
+    defer ctx.teardown();
+
+    const value = try glua.String.clone(ctx.lua, "Hello World!");
+    defer glua.String.free(ctx.lua, value);
+    try std.testing.expectEqualStrings("Hello World!", value);
+}
+
 test "read_integer_array" {
     var ctx = try TestContext.setup();
     defer ctx.teardown();
@@ -297,6 +306,38 @@ test "read_BaseType_type_error" {
     try std.testing.expectError(glua.Error.TypeError, value);
 }
 
+test "clone_BaseType" {
+    var ctx = try TestContext.setup();
+    defer ctx.teardown();
+
+    const value: gt.BaseType = .{
+        .valueInteger = 42,
+        .valueNumber = 42.42,
+        .valueString = "ABC",
+    };
+    const copy = try glua.BaseType.clone(ctx.lua, value);
+    defer glua.BaseType.free(ctx.lua, copy);
+    try std.testing.expectEqual(42, copy.valueInteger);
+    try std.testing.expectEqual(42.42, copy.valueNumber);
+    try std.testing.expectEqualStrings("ABC", copy.valueString);
+}
+
+test "clone_BaseType_array" {
+    var ctx = try TestContext.setup();
+    defer ctx.teardown();
+
+    const values = &[_]gt.BaseType{.{
+        .valueInteger = 42,
+        .valueNumber = 42.42,
+        .valueString = "ABC",
+    }};
+    const copies = try glua.BaseType.cloneArray(ctx.lua, values);
+    defer glua.BaseType.freeArray(ctx.lua, copies);
+    try std.testing.expectEqual(42, copies[0].valueInteger);
+    try std.testing.expectEqual(42.42, copies[0].valueNumber);
+    try std.testing.expectEqualStrings("ABC", copies[0].valueString);
+}
+
 test "read_ArrayType" {
     var ctx = try TestContext.setup();
     defer ctx.teardown();
@@ -316,4 +357,29 @@ test "read_ArrayType" {
     try std.testing.expectEqualStrings("A", value.valueString[0]);
     try std.testing.expectEqualStrings("B", value.valueString[1]);
     try std.testing.expectEqualStrings("C", value.valueString[2]);
+}
+
+test "clone_ArrayType" {
+    var ctx = try TestContext.setup();
+    defer ctx.teardown();
+
+    _ = try ctx.lua.doString(
+        \\return {
+        \\  valueInteger = {42, 43, 44},
+        \\  valueNumber = {42.42, 43.43, 44.44},
+        \\  valueString = {'A', 'B', 'C'}
+        \\}
+    );
+    defer checkStackLevel(ctx.lua, ctx.lua.getTop());
+    const value = try glua.ArrayType.read(ctx.lua, -1);
+    defer glua.ArrayType.free(ctx.lua, value);
+
+    const copy = try glua.ArrayType.clone(ctx.lua, value);
+    defer glua.ArrayType.free(ctx.lua, copy);
+
+    try std.testing.expectEqualSlices(zlua.Integer, &[_]zlua.Integer{ 42, 43, 44 }, copy.valueInteger);
+    try std.testing.expectEqualSlices(zlua.Number, &[_]zlua.Number{ 42.42, 43.43, 44.44 }, copy.valueNumber);
+    try std.testing.expectEqualStrings("A", copy.valueString[0]);
+    try std.testing.expectEqualStrings("B", copy.valueString[1]);
+    try std.testing.expectEqualStrings("C", copy.valueString[2]);
 }

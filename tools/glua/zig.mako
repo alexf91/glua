@@ -90,6 +90,27 @@ pub fn free(L: *Lua, value: ${tp.iname}) void {
 }
 </%def>
 
+## Generate a clone function for compound types.
+<%def name="generateClone(tp: TypeDef)">
+/// Clone a value.
+pub fn clone(L: *Lua, value: ${tp.iname}) !${tp.iname} {
+    var copy: ${tp.iname} = undefined;
+    // TODO: Add cleanup on error.
+    % for field in tp.allfields:
+        % if isinstance(field, FieldDef):
+            copy.${field.name} = try ${field.type}.clone(L, value.${field.name});
+        % elif isinstance(field, ArrayDef):
+            copy.${field.name} = try ${field.type}.cloneArray(L, value.${field.name});
+            % if not field.dynamic:
+                copy.${field.length} = value.${field.length};
+            % endif
+        % elif isinstance(field, UnionDef):
+        % endif
+    % endfor
+    return copy;
+}
+</%def>
+
 ## Generate a pushArray function.
 <%def name="generatePushArray(zigtype)">
 /// Push an array.
@@ -112,6 +133,14 @@ pub fn readArray(L: *Lua, index: i32) ![]${zigtype} {
 /// Free an array.
 pub fn freeArray(L: *Lua, values: []${zigtype}) void {
     return freeArrayImpl(${zigtype}, free, L, values);
+}
+</%def>
+
+## Generate a cloneArray function.
+<%def name="generateCloneArray(zigtype)">
+/// Clone an array.
+pub fn cloneArray(L: *Lua, values: []const ${zigtype}) ![] ${zigtype} {
+    return cloneArrayImpl(${zigtype}, clone, L, values);
 }
 </%def>
 
@@ -197,6 +226,20 @@ fn pushArrayImpl(comptime T: type, comptime pushValue: anytype, L: *Lua, values:
     }
 }
 
+/// Clone an array.
+fn cloneArrayImpl(comptime T: type, comptime cloneValue: anytype, L: *Lua, values: []const T) ![]T {
+    var i: usize = 0;
+    var copy = try L.allocator().alloc(T, values.len);
+
+    // TODO: Add error handling for the loop.
+    //       Should only happen when we run out of memory.
+    while (i < values.len) {
+        copy[i] = try cloneValue(L, values[i]);
+        i += 1;
+    }
+    return copy;
+}
+
 /// Error types used in generated code.
 pub const Error = error{
     GeneralError,
@@ -226,9 +269,17 @@ pub const Integer = struct {
         _ = L;
         _ = value;
     }
+
+    /// Clone a value.
+    pub fn clone(L: *Lua, value: zlua.Integer) !zlua.Integer {
+        _ = L;
+        return value;
+    }
+
     ${generateReadArray("zlua.Integer")}
     ${generatePushArray("zlua.Integer")}
     ${generateFreeArray("zlua.Integer")}
+    ${generateCloneArray("zlua.Integer")}
 };
 
 pub const Number = struct {
@@ -251,9 +302,16 @@ pub const Number = struct {
         _ = value;
     }
 
+    /// Clone a value.
+    pub fn clone(L: *Lua, value: zlua.Number) !zlua.Number {
+        _ = L;
+        return value;
+    }
+
     ${generateReadArray("zlua.Number")}
     ${generatePushArray("zlua.Number")}
     ${generateFreeArray("zlua.Number")}
+    ${generateCloneArray("zlua.Number")}
 };
 
 pub const String = struct {
@@ -280,9 +338,15 @@ pub const String = struct {
         L.allocator().free(value);
     }
 
+    /// Clone a value.
+    pub fn clone(L: *Lua, value: []const u8) ![]const u8 {
+        return L.allocator().dupe(u8, value);
+    }
+
     ${generateReadArray("[]const u8")}
     ${generatePushArray("[]const u8")}
     ${generateFreeArray("[]const u8")}
+    ${generateCloneArray("[]const u8")}
 };
 
 ## Generate functions for compound types.
@@ -291,8 +355,10 @@ pub const ${tp.name} = struct {
     ${generatePush(tp)}
     ${generateRead(tp)}
     ${generateFree(tp)}
+    ${generateClone(tp)}
     ${generateReadArray(tp.iname)}
     ${generatePushArray(tp.iname)}
     ${generateFreeArray(tp.iname)}
+    ${generateCloneArray(tp.iname)}
 };
 % endfor

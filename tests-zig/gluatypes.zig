@@ -13,3 +13,8 @@ pub const ArrayType = struct {
     valueNumber: []zlua.Number,
     valueString: [][]const u8,
 };
+
+pub const ScalarType = struct {
+    valueInteger: zlua.Integer,
+    valueNumber: zlua.Number,
+};
