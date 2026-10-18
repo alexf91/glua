@@ -25,9 +25,53 @@ pub fn read(L: *Lua, index: i32) !${tp.iname} {
     const absIndex = L.absIndex(index);
     if (!L.isTable(absIndex))
         return Error.TypeError;
+    var value: ${tp.iname} = undefined;
+
+    // Cleanup logic.
+    var initialized : struct {
+        % for field in tp.allfields:
+            ${field.name} : bool = false,
+        % endfor
+    } = .{};
+    errdefer {
+        % for field in tp.fields:
+            if (initialized.${field.name}) ${field.type}.free(L, value.${field.name});
+        % endfor
+        % for field in tp.arrays:
+            if (initialized.${field.name}) ${field.type}.freeArray(L, value.${field.name});
+        % endfor
+        % for field in tp.unions:
+            <% raise NotImplementedError("support for unions not implemented") %>
+        % endfor
+    }
+
     % for field in tp.allfields:
+        // Read field ${field.name}.
+        _ = L.getField(absIndex, "${field.name}");
+        defer L.pop(1);
+        if (L.isNil(-1)) {
+            % if field.optional:
+                <% raise NotImplementedError("optional fields not implemented") %>
+            % endif
+        } else {
+            % if isinstance(field, FieldDef):
+                value.${field.name} = try ${field.type}.read(L, -1);
+                initialized.${field.name} = true;
+            % elif isinstance(field, ArrayDef):
+                value.${field.name} = try ${field.type}.readArray(L, -1);
+                ## This is just for compatibility. Zig arrays have their length field included,
+                ## so they should always be declared as dynamic.
+                % if not field.dynamic:
+                    value.${field.length} = value.${field.name}.len;
+                % endif
+                initialized.${field.name} = true;
+            % elif isinstance(field, UnionDef):
+                <% raise NotImplementedError("optional fields not implemented") %>
+            % endif
+        }
     % endfor
-    return Error.GeneralError;
+
+    return value;
 }
 </%def>
 
@@ -35,9 +79,14 @@ pub fn read(L: *Lua, index: i32) !${tp.iname} {
 <%def name="generateFree(tp: TypeDef)">
 /// Free a value.
 pub fn free(L: *Lua, value: ${tp.iname}) void {
-    // TODO: implement
-    _ = L;
-    _ = value;
+    % for field in tp.allfields:
+        % if isinstance(field, FieldDef):
+            ${field.type}.free(L, value.${field.name});
+        % elif isinstance(field, ArrayDef):
+            ${field.type}.freeArray(L, value.${field.name});
+        % elif isinstance(field, UnionDef):
+        % endif
+    % endfor
 }
 </%def>
 
@@ -221,8 +270,8 @@ pub const String = struct {
 
         // Operate on a copy of `index` to avoid modifying the stack.
         L.pushValue(index);
+        defer L.pop(1);
         const value = try L.toString(-1);
-        L.pop(1);
         return L.allocator().dupe(u8, value);
     }
 

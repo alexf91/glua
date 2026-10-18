@@ -243,10 +243,51 @@ test "read_BaseType" {
     var ctx = try TestContext.setup();
     defer ctx.teardown();
 
-    _ = try ctx.lua.doString("return {valueInteger = 42, valueNumber = 42.42, valueString = 'ABC'}");
+    _ = try ctx.lua.doString(
+        \\return {
+        \\  valueInteger = 42,
+        \\  valueNumber = 42.42,
+        \\  valueString = 'ABC'
+        \\}
+    );
     const value = try glua.BaseType.read(ctx.lua, -1);
     defer glua.BaseType.free(ctx.lua, value);
     try std.testing.expectEqual(42, value.valueInteger);
     try std.testing.expectEqual(42.42, value.valueNumber);
     try std.testing.expectEqualStrings("ABC", value.valueString);
+}
+
+test "read_BaseType_type_error" {
+    var ctx = try TestContext.setup();
+    defer ctx.teardown();
+
+    _ = try ctx.lua.doString(
+        \\return {
+        \\  valueInteger = 'A',
+        \\  valueNumber = 42.42,
+        \\  valueString = 'ABC'
+        \\}
+    );
+    const value = glua.BaseType.read(ctx.lua, -1);
+    try std.testing.expectError(glua.Error.TypeError, value);
+}
+
+test "read_ArrayType" {
+    var ctx = try TestContext.setup();
+    defer ctx.teardown();
+
+    _ = try ctx.lua.doString(
+        \\return {
+        \\  valueInteger = {42, 43, 44},
+        \\  valueNumber = {42.42, 43.43, 44.44},
+        \\  valueString = {'A', 'B', 'C'}
+        \\}
+    );
+    const value = try glua.ArrayType.read(ctx.lua, -1);
+    defer glua.ArrayType.free(ctx.lua, value);
+    try std.testing.expectEqualSlices(zlua.Integer, &[_]zlua.Integer{ 42, 43, 44 }, value.valueInteger);
+    try std.testing.expectEqualSlices(zlua.Number, &[_]zlua.Number{ 42.42, 43.43, 44.44 }, value.valueNumber);
+    try std.testing.expectEqualStrings("A", value.valueString[0]);
+    try std.testing.expectEqualStrings("B", value.valueString[1]);
+    try std.testing.expectEqualStrings("C", value.valueString[2]);
 }

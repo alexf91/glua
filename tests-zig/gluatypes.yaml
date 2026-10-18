@@ -5,9 +5,25 @@ iname: gt.BaseType
 headers:
     gt: ../gluatypes.zig
 fields:
+    - name: valueString
+      type: String
     - name: valueInteger
       type: Integer
     - name: valueNumber
       type: Number
+---
+# Struct with array types.
+name: ArrayType
+iname: gt.ArrayType
+headers:
+    gt: ../gluatypes.zig
+arrays:
     - name: valueString
       type: String
+      dynamic: true
+    - name: valueInteger
+      type: Integer
+      dynamic: true
+    - name: valueNumber
+      type: Number
+      dynamic: true
