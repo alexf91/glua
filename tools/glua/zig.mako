@@ -84,7 +84,7 @@ pub fn read(L: *Lua, index: i32) !${tp.iname} {
                         value.${field.name} = try ${field.type}.cloneArray(L, defaultValue);
                     }
                 % elif isinstance(field, UnionDef):
-                    <% raise NotImplementedError("optional fields not implemented") %>
+                    <% raise NotImplementedError("unions not implemented") %>
                 % endif
                 initialized.${field.name} = true;
             % else:
@@ -95,15 +95,14 @@ pub fn read(L: *Lua, index: i32) !${tp.iname} {
                 value.${field.name} = try ${field.type}.read(L, -1);
                 initialized.${field.name} = true;
             % elif isinstance(field, ArrayDef):
-                value.${field.name} = try ${field.type}.readArray(L, -1);
-                ## This is just for compatibility. Zig arrays have their length field included,
-                ## so they should always be declared as dynamic.
                 % if not field.dynamic:
-                    value.${field.length} = value.${field.name}.len;
+                    value.${field.name} = try ${field.type}.readArray(L, -1);
+                % else:
+                    <% raise NotImplementedError("dynamic fields not implemented") %>
                 % endif
                 initialized.${field.name} = true;
             % elif isinstance(field, UnionDef):
-                <% raise NotImplementedError("optional fields not implemented") %>
+                <% raise NotImplementedError("unions not implemented") %>
             % endif
         }
     % endfor
@@ -147,9 +146,10 @@ pub fn clone(L: *Lua, value: ${tp.iname}) !${tp.iname} {
         % if isinstance(field, FieldDef):
             copy.${field.name} = try ${field.type}.clone(L, value.${field.name});
         % elif isinstance(field, ArrayDef):
-            copy.${field.name} = try ${field.type}.cloneArray(L, value.${field.name});
             % if not field.dynamic:
-                copy.${field.length} = value.${field.length};
+                copy.${field.name} = try ${field.type}.cloneArray(L, value.${field.name});
+            % else:
+                <% raise NotImplementedError("dynamic fields not implemented") %>
             % endif
         % elif isinstance(field, UnionDef):
         % endif

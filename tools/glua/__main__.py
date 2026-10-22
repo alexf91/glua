@@ -42,7 +42,7 @@ def main() -> int:
         with open(path) as fp:
             docs = yaml.safe_load_all(fp)
             for doc in docs:
-                types.append(TypeDef.from_yaml(doc))
+                types.append(TypeDef.from_yaml(doc, language=args.language))
 
     print(template.render(default_headers=DEFAULT_HEADERS[args.language], types=types))
 

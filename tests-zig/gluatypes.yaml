@@ -68,10 +68,7 @@ headers:
 arrays:
     - name: valueString
       type: String
-      dynamic: true
     - name: valueInteger
       type: Integer
-      dynamic: true
     - name: valueNumber
       type: Number
-      dynamic: true

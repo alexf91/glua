@@ -41,7 +41,7 @@ class FieldDef(BaseDef):
     REQUIRED_FIELDS: ClassVar[set[str]] = {"name", "type"}
 
     @classmethod
-    def from_yaml(cls, doc: dict[str, Any]) -> FieldDef:
+    def from_yaml(cls, doc: dict[str, Any], **options: Any) -> FieldDef:
         """Create a field description from the YAML field."""
         cls.check_fields(doc)
         return cls(**doc)
@@ -72,14 +72,20 @@ class ArrayDef(BaseDef):
     REQUIRED_FIELDS: ClassVar[set[str]] = {"name", "type"}
 
     @classmethod
-    def from_yaml(cls, doc: dict[str, Any]) -> ArrayDef:
+    def from_yaml(cls, doc: dict[str, Any], **options: Any) -> ArrayDef:
         """Create a field description from the YAML document."""
         cls.check_fields(doc)
         obj = cls(**doc)
-        if obj.length is None and not obj.dynamic:
-            raise GluaError("static array defined without 'length' field")
-        elif obj.length is not None and obj.dynamic:
-            raise GluaError("dynamic array defined with 'length' field")
+        if options["language"] == "c":
+            if obj.length is None and not obj.dynamic:
+                raise GluaError("static array defined without 'length' field")
+            elif obj.length is not None and obj.dynamic:
+                raise GluaError("dynamic array defined with 'length' field")
+        elif options["language"] == "zig":
+            if obj.length is not None:
+                raise GluaError("'length' field not supported")
+        else:
+            raise GluaError(f"invalid language: {options['language']}")
         return obj
 
 
@@ -139,7 +145,7 @@ class UnionDef(BaseDef):
     REQUIRED_FIELDS: ClassVar[set[str]] = {"name", "types", "fields", "index"}
 
     @classmethod
-    def from_yaml(cls, doc: dict[str, Any]) -> UnionDef:
+    def from_yaml(cls, doc: dict[str, Any], **options: Any) -> UnionDef:
         """Create a field description from the YAML document."""
         cls.check_fields(doc)
         if len(doc["types"]) != len(doc["fields"]):
@@ -172,16 +178,16 @@ class TypeDef(BaseDef):
     REQUIRED_FIELDS: ClassVar[set[str]] = {"name"}
 
     @classmethod
-    def from_yaml(cls, doc: dict[str, Any]) -> TypeDef:
+    def from_yaml(cls, doc: dict[str, Any], **options: Any) -> TypeDef:
         """Create a type description from the YAML document."""
         cls.check_fields(doc)
         return cls(
             name=doc["name"],
             iname=doc.get("iname") or doc["name"],
             headers=doc.get("headers", []),
-            fields=[FieldDef.from_yaml(f) for f in doc.get("fields", [])],
-            arrays=[ArrayDef.from_yaml(f) for f in doc.get("arrays", [])],
-            unions=[UnionDef.from_yaml(f) for f in doc.get("unions", [])],
+            fields=[FieldDef.from_yaml(f, **options) for f in doc.get("fields", [])],
+            arrays=[ArrayDef.from_yaml(f, **options) for f in doc.get("arrays", [])],
+            unions=[UnionDef.from_yaml(f, **options) for f in doc.get("unions", [])],
         )
 
     @property
